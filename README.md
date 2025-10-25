@@ -1,2 +1,2 @@
 # Money-Wise
-Ứng dụng quản lý tài chính cá nhân
+Ứng dụng quản lý tài chính cá nhân giúp người dùng theo dõi thu chi, thiết lập ngân sách.
