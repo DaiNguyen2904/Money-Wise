@@ -47,4 +47,10 @@ public interface ExpenseDao {
 
     @Query("SELECT * FROM EXPENSES WHERE expense_id = :expenseId LIMIT 1")
     Expense getExpenseById(String expenseId);
+
+    @Query("UPDATE EXPENSES SET synced = :syncedValue WHERE expense_id = :expenseId")
+    void setSynced(String expenseId, int syncedValue);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<Expense> expenses);
 }

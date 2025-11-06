@@ -71,35 +71,11 @@ public class CategoryAdapter extends ArrayAdapter<Category> {
             // Xử lý Icon & Màu sắc (Phần này sẽ cần bạn hoàn thiện)
 
             // ----- Logic xử lý Icon (Ví dụ) -----
-            // Bạn sẽ cần một hàm để ánh xạ tên icon (ví dụ: "icon_food")
-            // sang một ID tài nguyên (ví dụ: R.drawable.ic_food)
-            // int iconResId = getIconResource(currentCategory.icon);
-            // imageViewIcon.setImageResource(iconResId);
+            int iconResId = getIconResource(currentCategory.icon);
+            if (iconResId != 0) { // Kiểm tra xem có tìm thấy icon không
+                imageViewIcon.setImageResource(iconResId);
+            }
 
-            // ----- Logic xử lý Màu nền (Ví dụ) -----
-            // Lấy mã màu (ví dụ: "#FF5733")
-            if (currentCategory.color != null && !currentCategory.color.isEmpty()) {
-                try {
-                    int backgroundColor = Color.parseColor(currentCategory.color);
-
-                    // Tạo một shape tròn (hoặc oval)
-                    GradientDrawable shape = new GradientDrawable();
-                    shape.setShape(GradientDrawable.OVAL);
-                    shape.setColor(backgroundColor);
-                    imageViewIcon.setBackground(shape);
-
-                    // (Bạn có thể muốn icon màu trắng trên nền màu)
-                    imageViewIcon.setColorFilter(Color.WHITE);
-
-                } catch (IllegalArgumentException e) {
-                    // Xử lý nếu mã màu bị sai
-                    // Đặt màu mặc định
-                    imageViewIcon.setBackgroundColor(Color.LTGRAY);
-                }
-            } else {
-                // Màu mặc định nếu không có
-                imageViewIcon.setBackgroundColor(Color.LTGRAY);
-            }// Chỉ còn 1 trường hợp: "Quản lý"
             layoutButtons.setVisibility(View.VISIBLE);
 
             buttonEdit.setOnClickListener(v ->
@@ -116,7 +92,23 @@ public class CategoryAdapter extends ArrayAdapter<Category> {
         // 5. Trả về View đã hoàn thiện
         return listItemView;
     }
+    private int getIconResource(String iconName) {
+        // (Bạn có thể thay R.drawable.ic_launcher_background bằng một icon mặc định khác)
 
+        if (iconName == null || iconName.isEmpty()) {
+            return R.drawable.ic_launcher_background;
+        }
+
+        try {
+            Context context = getContext();
+            // Lấy ID tài nguyên từ tên String
+            return context.getResources().getIdentifier(iconName, "drawable", context.getPackageName());
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Trả về icon mặc định nếu lỗi
+            return R.drawable.ic_launcher_background;
+        }
+    }
     /**
      * Hàm tiện ích để cập nhật dữ liệu cho Adapter
      */

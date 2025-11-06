@@ -8,6 +8,7 @@ import androidx.lifecycle.LiveData;
 
 import com.example.moneywise.data.entity.Expense;
 import com.example.moneywise.repository.MoneyWiseRepository;
+import com.example.moneywise.utils.SessionManager;
 
 import java.util.List;
 
@@ -24,6 +25,8 @@ public class ExpenseViewModel extends AndroidViewModel {
     // Chúng ta dùng 1 biến LiveData có thể thay đổi để lọc (sẽ giải thích sau)
     private LiveData<List<Expense>> mAllExpenses;
 
+    private String currentUserId;
+
     // (Bạn cũng có thể thêm LiveData cho Categories, Budgets nếu màn hình này cần)
 
     // 3. Constructor
@@ -32,7 +35,8 @@ public class ExpenseViewModel extends AndroidViewModel {
         mRepository = new MoneyWiseRepository(application);
 
         // Giả sử chúng ta có một ID người dùng cố định (bạn sẽ thay thế bằng ID thật)
-        String currentUserId = "USER_ID_TAM_THOI"; // <-- Sẽ thay bằng ID người dùng thật
+        SessionManager sessionManager = new SessionManager(application);
+        currentUserId = sessionManager.getUserId(); // Lấy ID đã lưu
         mAllExpenses = mRepository.getAllExpenses(currentUserId);
     }
 

@@ -13,6 +13,7 @@ import com.example.moneywise.data.entity.Category;
 import com.example.moneywise.data.entity.Expense;
 import com.example.moneywise.data.model.BudgetStatus;
 import com.example.moneywise.repository.MoneyWiseRepository;
+import com.example.moneywise.utils.SessionManager;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -23,7 +24,7 @@ import java.util.Map;
 public class BudgetViewModel extends AndroidViewModel {
 
     private MoneyWiseRepository mRepository;
-    private String currentUserId = "USER_ID_TAM_THOI"; // TODO: Thay thế ID thật
+    private String currentUserId;
 
     // 1 nguồn dữ liệu
     private LiveData<List<Category>> mAllCategories;
@@ -41,7 +42,8 @@ public class BudgetViewModel extends AndroidViewModel {
         mRepository = new MoneyWiseRepository(application);
         mBudgetStatuses = new MediatorLiveData<>();
 
-        String currentUserId = "USER_ID_TAM_THOI"; // TODO: Thay ID thật
+        SessionManager sessionManager = new SessionManager(application);
+        currentUserId = sessionManager.getUserId(); // Lấy ID đã lưu
 
         // Lấy 3 nguồn (SỬA: Dùng getAllBudgets)
         mAllBudgets = mRepository.getAllBudgets(currentUserId);
@@ -166,6 +168,13 @@ public class BudgetViewModel extends AndroidViewModel {
         // (synced, updatedAt sẽ do Repository xử lý)
 
         mRepository.insertBudget(budget); // (Chúng ta sẽ cần tạo hàm này trong Repository)
+    }
+
+    public void update(Budget budget) {
+        // Gán userId và thời gian
+        budget.userId = currentUserId;
+        budget.updatedAt = System.currentTimeMillis();
+        mRepository.updateBudget(budget); // (Sẽ tạo ở bước sau)
     }
 
     public void delete(Budget budget) {

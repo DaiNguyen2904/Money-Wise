@@ -1,22 +1,36 @@
 package com.example.moneywise;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import com.example.moneywise.repository.MoneyWiseRepository;
 import com.example.moneywise.ui.budgets.BudgetFragment;
 import com.example.moneywise.ui.categories.CategoryFragment;
 import com.example.moneywise.ui.expenses.ExpenseFragment;
+import com.example.moneywise.utils.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity{
     private BottomNavigationView mBottomNav;
+    private MoneyWiseRepository mRepository;
+    private SessionManager mSessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main); // Layout chính (chứa container)
+
+        mRepository = new MoneyWiseRepository(getApplication());
+        mSessionManager = new SessionManager(this);
+
+        String userId = mSessionManager.getUserId();
+        if (userId != null) {
+            Log.d("MainActivity", "Bắt đầu lắng nghe thời gian thực cho user: " + userId);
+            mRepository.startRealtimeSync(userId);
+        }
 
         mBottomNav = findViewById(R.id.bottom_navigation);
         setupBottomNavigation();
@@ -24,6 +38,14 @@ public class MainActivity extends AppCompatActivity{
         // Tải Fragment mặc định khi mở ứng dụng
         if (savedInstanceState == null) {
             loadFragment(new ExpenseFragment());
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mRepository != null) {
+            mRepository.stopRealtimeSync();
         }
     }
 

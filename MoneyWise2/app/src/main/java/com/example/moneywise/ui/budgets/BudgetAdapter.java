@@ -71,6 +71,17 @@ public class BudgetAdapter extends ArrayAdapter<BudgetStatus> {
 
             // Đặt tiến độ
             progressBar.setProgress(currentStatus.progressPercent);
+            buttonEdit.setOnClickListener(v -> {
+                if (mListener != null) {
+                    mListener.onEditClick(currentStatus);
+                }
+            });
+
+            buttonDelete.setOnClickListener(v -> {
+                if (mListener != null) {
+                    mListener.onDeleteClick(currentStatus);
+                }
+            });
         }
 
         return listItemView;

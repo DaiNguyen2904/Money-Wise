@@ -7,6 +7,7 @@ import androidx.lifecycle.LiveData;
 
 import com.example.moneywise.data.entity.Category;
 import com.example.moneywise.repository.MoneyWiseRepository;
+import com.example.moneywise.utils.SessionManager;
 
 import java.util.List;
 
@@ -16,11 +17,14 @@ public class CategoryViewModel extends AndroidViewModel {
     private LiveData<List<Category>> mAllCategories;
 
     // Giả sử lấy ID người dùng (sẽ thay thế sau)
-    private String currentUserId = "USER_ID_TAM_THOI";
+    private String currentUserId;
 
     public CategoryViewModel(@NonNull Application application) {
         super(application);
         mRepository = new MoneyWiseRepository(application);
+        mAllCategories = mRepository.getAllCategories(currentUserId);
+        SessionManager sessionManager = new SessionManager(application);
+        currentUserId = sessionManager.getUserId(); // Lấy ID đã lưu
         mAllCategories = mRepository.getAllCategories(currentUserId);
     }
 

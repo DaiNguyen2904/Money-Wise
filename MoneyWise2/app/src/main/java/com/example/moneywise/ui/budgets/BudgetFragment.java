@@ -23,6 +23,7 @@ import com.example.moneywise.data.entity.Budget;
 import com.example.moneywise.data.entity.BudgetPeriod;
 import com.example.moneywise.data.model.BudgetStatus;
 import com.example.moneywise.ui.budgets.AddEditBudgetActivity;
+import com.example.moneywise.utils.SessionManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.example.moneywise.R;
 
@@ -45,6 +46,8 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
     private TextView mTotalSpent;
     private TextView mTotalAmount;
     private NumberFormat mCurrencyFormat; // Để định dạng tiền
+
+    private String currentUserId;
 
     // Launcher để mở màn hình Thêm/Sửa Ngân sách
     private ActivityResultLauncher<Intent> mAddEditBudgetLauncher;
@@ -101,25 +104,46 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
             }
         });
 
-        // 5. Đăng ký Launcher
+
+
+
         mAddEditBudgetLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                         Intent data = result.getData();
-
-                        // Lấy dữ liệu đã đơn giản hóa
                         String categoryId = data.getStringExtra(AddEditBudgetActivity.EXTRA_BUDGET_CATEGORY_ID);
                         double amount = data.getDoubleExtra(AddEditBudgetActivity.EXTRA_BUDGET_AMOUNT, 0);
 
-                        // (Logic Sửa/Thêm sẽ được làm ở Bước 4)
+                        // --- CẬP NHẬT LOGIC ---
                         if (data.hasExtra(AddEditBudgetActivity.EXTRA_BUDGET_ID)) {
-                            // --- CHẾ ĐỘ SỬA (Bước 4) ---
+                            // --- CHẾ ĐỘ SỬA ---
+                            String budgetId = data.getStringExtra(AddEditBudgetActivity.EXTRA_BUDGET_ID);
+
+                            // Tạo đối tượng Budget để cập nhật
+                            // (Chúng ta không cần tạo mới, chỉ cần ID, categoryId, amount)
+                            // (Chúng ta sẽ cần hàm getBudgetById_Sync nếu muốn giữ lại createdAt)
+                            // Tạm thời, tạo mới với ID cũ
+                            SessionManager sessionManager = new SessionManager(requireActivity().getApplication());
+                            currentUserId = sessionManager.getUserId(); // Lấy ID đã lưu
+
+                            Budget updatedBudget = new Budget(
+                                    budgetId, // ID Cũ
+                                    currentUserId,
+                                    categoryId,
+                                    amount,
+                                    System.currentTimeMillis() // Coi như là createdAt mới
+                            );
+                            // TODO: Nâng cấp: Tải budget cũ, chỉ cập nhật amount/categoryId
+
+                            mBudgetViewModel.update(updatedBudget);
+                            Toast.makeText(requireContext(), "Đã cập nhật Ngân sách!", Toast.LENGTH_SHORT).show();
+
                         } else {
-                            // --- CHẾ ĐỘ THÊM ---
+                            // --- CHẾ ĐỘ THÊM (Như cũ) ---
                             Budget newBudget = new Budget(
                                     UUID.randomUUID().toString(),
-                                    "USER_ID_TAM_THOI", // TODO: Thay ID thật
+                                    currentUserId, // TODO: Thay ID thật
                                     categoryId,
                                     amount,
                                     System.currentTimeMillis()
@@ -129,6 +153,8 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
                         }
                     }
                 });
+
+
 
         // 6. Xử lý FAB Click (dùng requireContext())
         mFab.setOnClickListener(v -> {
@@ -143,20 +169,18 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
      */
     @Override
     public void onEditClick(BudgetStatus budgetStatus) {
-        // Lấy Ngân sách (Budget) từ đối tượng Status
         Budget budgetToEdit = budgetStatus.budget;
 
-        // Mở màn hình AddEditBudgetActivity
         Intent intent = new Intent(requireContext(), AddEditBudgetActivity.class);
 
-        // TODO: Gửi ID và dữ liệu sang cho chế độ "Sửa"
-        // (Chúng ta chưa làm logic Sửa cho Ngân sách,
-        //  nhưng đây là nơi bạn sẽ đặt nó)
-        // intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_ID, budgetToEdit.budgetId);
+        // Gửi dữ liệu Sửa sang
+        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_ID, budgetToEdit.budgetId);
+        // (Gửi 2 cái này để AddEditBudgetActivity có thể điền vào
+        //  ngay cả trước khi ViewModel tải xong)
+        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_CATEGORY_ID, budgetToEdit.categoryId);
+        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_AMOUNT, budgetToEdit.amount);
 
-        // Tạm thời, chúng ta chỉ mở chế độ "Thêm"
-        // mAddEditBudgetLauncher.launch(intent);
-        Toast.makeText(requireContext(), "Chức năng Sửa Ngân sách (chưa làm)", Toast.LENGTH_SHORT).show();
+        mAddEditBudgetLauncher.launch(intent);
     }
 
     /**

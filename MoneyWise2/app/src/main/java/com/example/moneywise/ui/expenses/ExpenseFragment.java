@@ -25,6 +25,7 @@ import com.example.moneywise.R;
 import com.example.moneywise.data.entity.Expense;
 import com.example.moneywise.ui.budgets.BudgetActivity;
 import com.example.moneywise.ui.categories.CategoryActivity;
+import com.example.moneywise.utils.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -43,6 +44,8 @@ public class ExpenseFragment extends Fragment implements ExpenseAdapter.OnExpens
     private FloatingActionButton mFab;
 
     private ActivityResultLauncher<Intent> mAddExpenseLauncher;
+
+    private String currentUserId;
 
     @Nullable
     @Override
@@ -88,7 +91,8 @@ public class ExpenseFragment extends Fragment implements ExpenseAdapter.OnExpens
                             String categoryId = data.getStringExtra(AddEditExpenseActivity.EXTRA_CATEGORY_ID);
                             long date = data.getLongExtra(AddEditExpenseActivity.EXTRA_DATE, 0);
                             String note = data.getStringExtra(AddEditExpenseActivity.EXTRA_NOTE);
-
+                            SessionManager sessionManager = new SessionManager(requireActivity().getApplication());
+                            currentUserId = sessionManager.getUserId(); // Lấy ID đã lưu
                             // --- BẮT ĐẦU CẬP NHẬT LOGIC ---
 
                             // Kiểm tra xem có ID được gửi về không
@@ -110,7 +114,7 @@ public class ExpenseFragment extends Fragment implements ExpenseAdapter.OnExpens
                                 // --- CHẾ ĐỘ THÊM MỚI (Logic cũ) ---
                                 Expense newExpense = new Expense();
                                 newExpense.expenseId = UUID.randomUUID().toString();
-                                newExpense.userId = "USER_ID_TAM_THOI";
+                                newExpense.userId = currentUserId;
                                 newExpense.amount = amount;
                                 newExpense.categoryId = categoryId;
                                 newExpense.date = date;
@@ -164,20 +168,6 @@ public class ExpenseFragment extends Fragment implements ExpenseAdapter.OnExpens
         alertDialog.show();
     }
 
-    /**
-     * Hàm test để chèn 1 chi tiêu giả
-     */
-    private void insertTestExpense() {
-        Expense testExpense = new Expense();
-        testExpense.expenseId = java.util.UUID.randomUUID().toString(); // Tạo UUID ngẫu nhiên
-        testExpense.userId = "USER_ID_TAM_THOI"; // Phải khớp với ID trong ViewModel
-        testExpense.amount = Math.random() * 100000; // Số tiền ngẫu nhiên
-        testExpense.note = "Chi tiêu Test " + System.currentTimeMillis() % 100;
-        testExpense.date = System.currentTimeMillis(); // Ngày hôm nay
-
-        // Gọi ViewModel để chèn
-        mExpenseViewModel.insert(testExpense);
-    }
 
     @Override
     public void onEditClick(Expense expense) {

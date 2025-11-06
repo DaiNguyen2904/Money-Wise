@@ -22,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.moneywise.R;
+import com.example.moneywise.data.entity.Budget;
 import com.example.moneywise.data.entity.Category;
 import com.example.moneywise.data.entity.Expense;
 import com.example.moneywise.ui.budgets.AddEditBudgetViewModel;
@@ -64,13 +65,12 @@ public class AddEditBudgetActivity extends AppCompatActivity {
     private ActivityResultLauncher<Intent> mPickCategoryLauncher;
     // Khai báo Views
 
-
+    private LinearLayout mBtnTotalBudget;
     private AddEditBudgetViewModel mViewModel;
     private String mCurrentBudgetId; // Lưu ID khi ở chế độ Sửa
     private boolean isEditMode = false;
-    private boolean isCategoryListLoaded = false; // Cờ để xử lý Spinner
-    private boolean isBudgetDataLoaded = false; // Cờ để xử lý Spinner
-
+    private boolean isCategoryListLoaded = false;
+    private boolean isBudgetDataLoaded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,35 +95,47 @@ public class AddEditBudgetActivity extends AppCompatActivity {
         // XÓA: setupDatePicker();
         setupSaveButton();
 
-        // 1. KIỂM TRA INTENT ĐỂ XEM LÀ "THÊM" HAY "SỬA"
         Intent intent = getIntent();
         if (intent.hasExtra(EXTRA_BUDGET_ID)) {
-//            // Đây là chế độ "Sửa"
-//            isEditMode = true;
-//            mCurrentExpenseId = intent.getStringExtra(EXTRA_EXPENSE_ID);
-//
-//            if (getSupportActionBar() != null) {
-//                getSupportActionBar().setTitle("Sửa Giao dịch");
-//            }
-//
-//            // Yêu cầu ViewModel tải dữ liệu của Giao dịch này
-//            mViewModel.loadExpense(mCurrentExpenseId);
-//
-//            // 2. THEO DÕI DỮ LIỆU GIAO DỊCH
-//            observeLoadedExpense();
-//
-//        } else {
-//            // Đây là chế độ "Thêm mới"
-//            isEditMode = false;
-//            if (getSupportActionBar() != null) {
-//                getSupportActionBar().setTitle("Thêm Giao dịch mới");
-//            }
+            // Đây là chế độ "Sửa"
+            isEditMode = true;
+            mCurrentBudgetId = intent.getStringExtra(EXTRA_BUDGET_ID);
+
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setTitle("Sửa Ngân sách");
+            }
+
+            // Yêu cầu ViewModel tải dữ liệu Ngân sách
+            mViewModel.loadBudget(mCurrentBudgetId);
+
+            // Theo dõi dữ liệu Ngân sách vừa tải
+            observeLoadedBudget();
+
+        } else {
+            // Đây là chế độ "Thêm mới"
+            isEditMode = false;
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setTitle("Thêm Ngân sách mới");
+            }
         }
 
         // (Thêm nút Back cho ActionBar)
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+    }
+
+    private void observeLoadedBudget() {
+        mViewModel.getLoadedBudget().observe(this, budget -> {
+            if (budget != null) {
+                // 1. Điền số tiền
+                mEditTextAmount.setText(String.valueOf(budget.amount));
+
+                // 2. Cố gắng highlight nút danh mục
+                isBudgetDataLoaded = true;
+                trySetButtonSelection(budget.categoryId);
+            }
+        });
     }
 
 
@@ -147,17 +159,19 @@ public class AddEditBudgetActivity extends AppCompatActivity {
             return; // Ngăn không cho lưu
         }
 
-        // 2. Lấy dữ liệu
-        double amount = Double.parseDouble(amountString);
+        double amount = Double.parseDouble(mEditTextAmount.getText().toString());
         String categoryId = mSelectedCategoryId;
 
+        // 3. Đóng gói dữ liệu
         Intent replyIntent = new Intent();
         replyIntent.putExtra(EXTRA_BUDGET_CATEGORY_ID, categoryId);
         replyIntent.putExtra(EXTRA_BUDGET_AMOUNT, amount);
 
-        // --- KẾT THÚC THÊM MỚI ---
+        // --- CẬP NHẬT: GỬI KÈM ID NẾU LÀ CHẾ ĐỘ SỬA ---
+        if (isEditMode) {
+            replyIntent.putExtra(EXTRA_BUDGET_ID, mCurrentBudgetId);
+        }
 
-        // 4. Gửi kết quả (như cũ)
         setResult(RESULT_OK, replyIntent);
         finish();
     }
@@ -269,8 +283,46 @@ public class AddEditBudgetActivity extends AppCompatActivity {
 
             // (Phần này để xử lý chế độ Sửa, giống như cũ)
             isCategoryListLoaded = true; // Dùng lại cờ này
-
+            // Nếu là chế độ Sửa, cố gắng highlight
+            if (isEditMode) {
+                // Lấy budgetId từ LiveData (nếu đã tải xong)
+                Budget budget = mViewModel.getLoadedBudget().getValue();
+                if (budget != null) {
+                    trySetButtonSelection(budget.categoryId);
+                }
+            }
         });
+    }
+
+    /**
+     * HÀM MỚI (Copy từ AddEditExpense và sửa lại)
+     * Dùng để highlight nút khi ở chế độ Sửa
+     */
+    private void trySetButtonSelection(String categoryIdToSelect) {
+        // Chờ cả 2 nguồn dữ liệu (Danh mục và Ngân sách) sẵn sàng
+        if (!isCategoryListLoaded || !isBudgetDataLoaded) {
+            return;
+        }
+
+        // 1. Kiểm tra xem ID có nằm trong 9 nút mặc định không
+        String selectedPresetName = null;
+        for (Map.Entry<String, String> entry : mPresetIdMap.entrySet()) {
+            if (entry.getValue().equals(categoryIdToSelect)) {
+                selectedPresetName = entry.getKey();
+                break;
+            }
+        }
+
+        if (selectedPresetName != null) {
+            // 2. Nằm trong 9 nút -> Highlight nút đó
+            View buttonToSelect = mPresetButtonMap.get(selectedPresetName);
+            if (buttonToSelect != null) {
+                selectCategoryButton(categoryIdToSelect, buttonToSelect);
+            }
+        } else {
+            // 4. Là danh mục "Khác"
+            selectCategoryButton(categoryIdToSelect, mBtnOtherCategory);
+        }
     }
 
     /**

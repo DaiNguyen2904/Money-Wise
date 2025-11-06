@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "828574850583",
+    "project_id": "money-wise-7e82d",
+    "storage_bucket": "money-wise-7e82d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:828574850583:android:ca13e43a371374fdd7c652",
+        "android_client_info": {
+          "package_name": "com.example.moneywise"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "828574850583-ib013ii6fqd2kt8vh0dvp9d8tuk48nvp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.moneywise",
+            "certificate_hash": "c82c37bfd13550ac681a16b27b268fee52988242"
+          }
+        },
+        {
+          "client_id": "828574850583-nhgsn1jd1d10q004p60fb9coe6p17054.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbe5HeOrgWH7QtbUgWXQt-oFurh3segHw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "828574850583-nhgsn1jd1d10q004p60fb9coe6p17054.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

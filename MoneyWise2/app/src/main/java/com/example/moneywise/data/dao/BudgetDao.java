@@ -33,4 +33,10 @@ public interface BudgetDao {
     List<Budget> getUnsyncedBudgets();
     @Query("SELECT * FROM BUDGETS WHERE budget_id = :budgetId LIMIT 1")
     Budget getBudgetById(String budgetId);
+
+    @Query("UPDATE BUDGETS SET synced = :syncedValue WHERE budget_id = :budgetId")
+    void setSynced(String budgetId, int syncedValue);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<Budget> budgets);
 }

@@ -38,4 +38,7 @@ public interface CategoryDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<Category> categories);
+
+    @Query("UPDATE CATEGORIES SET synced = :syncedValue WHERE category_id = :categoryId")
+    void setSynced(String categoryId, int syncedValue);
 }
