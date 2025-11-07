@@ -19,6 +19,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.moneywise.R;
@@ -76,6 +77,8 @@ public class AddEditExpenseActivity extends AppCompatActivity {
     private boolean isCategoryListLoaded = false; // Cờ để xử lý Spinner
     private boolean isExpenseDataLoaded = false; // Cờ để xử lý Spinner
 
+    private Toolbar mToolbar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +93,8 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         mButtonSelectDate = findViewById(R.id.button_select_date);
         mEditTextNote = findViewById(R.id.edit_text_note);
         mButtonSave = findViewById(R.id.button_save);
+        mToolbar = findViewById(R.id.toolbar_add_edit_expense);
+        setSupportActionBar(mToolbar);
 
         // Khởi tạo
         mCalendar = Calendar.getInstance();
@@ -146,17 +151,17 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         mViewModel.getLoadedExpense().observe(this, expense -> {
             if (expense != null) {
                 // Điền dữ liệu Giao dịch vào Form
-                mEditTextAmount.setText(String.valueOf(expense.amount));
-                mEditTextNote.setText(expense.note);
+                mEditTextAmount.setText(String.valueOf(expense.getAmount()));
+                mEditTextNote.setText(expense.getNote());
 
                 // Cập nhật Calendar và nút Ngày
-                mCalendar.setTimeInMillis(expense.date);
-                mSelectedDateTimestamp = expense.date;
+                mCalendar.setTimeInMillis(expense.getDate());
+                mSelectedDateTimestamp = expense.getDate();
                 updateDateButtonText();
 
                 isExpenseDataLoaded = true;
                 // Cố gắng cập nhật Spinner (nếu danh mục cũng đã tải xong)
-                trySetSpinnerSelection(expense.categoryId);
+                trySetSpinnerSelection(expense.getCategoryId());
             }
         });
     }
@@ -173,7 +178,7 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         if (categoryIdToSelect == null) {
             // Lấy từ LiveData (nếu hàm này được gọi từ observe(categories))
             Expense expense = mViewModel.getLoadedExpense().getValue();
-            if (expense != null) categoryIdToSelect = expense.categoryId;
+            if (expense != null) categoryIdToSelect = expense.getCategoryId();
             else return; // Không có gì để chọn
         }
 
@@ -316,7 +321,7 @@ public class AddEditExpenseActivity extends AppCompatActivity {
             // 1. Tạo Map để tra cứu Category bằng Tên
             Map<String, Category> categoryNameMap = new HashMap<>();
             for (Category cat : categories) {
-                categoryNameMap.put(cat.name, cat);
+                categoryNameMap.put(cat.getName(), cat);
             }
 
             // 2. Cấu hình 9 nút mặc định
@@ -334,19 +339,19 @@ public class AddEditExpenseActivity extends AppCompatActivity {
                     ImageView icon = buttonView.findViewById(R.id.image_category_icon);
                     TextView name = buttonView.findViewById(R.id.text_category_name);
 
-                    name.setText(category.name);
+                    name.setText(category.getName());
 
-                    int iconResId = getIconResource(category.icon);
+                    int iconResId = getIconResource(category.getIcon());
                     if (iconResId != 0) { // Nếu tìm thấy icon
                         icon.setImageResource(iconResId);
                     }
 
                     // Lưu ID để dùng sau
-                    mPresetIdMap.put(presetName, category.categoryId);
+                    mPresetIdMap.put(presetName, category.getCategoryId());
 
                     // Gán sự kiện
                     buttonView.setOnClickListener(v ->
-                            selectCategoryButton(category.categoryId, buttonView)
+                            selectCategoryButton(category.getCategoryId(), buttonView)
                     );
 
                 } else {
@@ -363,7 +368,7 @@ public class AddEditExpenseActivity extends AppCompatActivity {
                 otherButtonView.setVisibility(View.VISIBLE);
                 // Chỉ lưu ID của category "Khác" vào Map
                 // (Để hàm trySetSpinnerSelection() có thể tìm và highlight nút này)
-                mPresetIdMap.put(otherPresetName, otherCategory.categoryId);
+                mPresetIdMap.put(otherPresetName, otherCategory.getCategoryId());
 
                 // **QUAN TRỌNG:**
                 // Chúng ta KHÔNG cấu hình icon/text (vì layout khác, sẽ crash)

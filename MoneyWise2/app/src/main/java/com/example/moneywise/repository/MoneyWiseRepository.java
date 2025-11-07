@@ -65,7 +65,7 @@ public class MoneyWiseRepository {
 
                     for (DocumentChange dc : snapshots.getDocumentChanges()) {
                         Expense expense = dc.getDocument().toObject(Expense.class);
-                        expense.synced = 1; // Dữ liệu từ server luôn là "đã đồng bộ"
+                        expense.setSynced(1); // Dữ liệu từ server luôn là "đã đồng bộ"
 
                         switch (dc.getType()) {
                             case ADDED:
@@ -94,7 +94,7 @@ public class MoneyWiseRepository {
                     if (snapshots == null) return;
                     for (DocumentChange dc : snapshots.getDocumentChanges()) {
                         Category category = dc.getDocument().toObject(Category.class);
-                        category.synced = 1;
+                        category.setSynced(1);
                         switch (dc.getType()) {
                             case ADDED: insertCategory_Sync(category); break;
                             case MODIFIED: updateCategory_Sync(category); break;
@@ -233,10 +233,10 @@ public class MoneyWiseRepository {
 
     public void insertCategory(Category category) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            category.synced = 0;
+            category.setSynced(0);
             SyncQueue syncItem = new SyncQueue(
                     "CATEGORIES",
-                    category.categoryId,
+                    category.getCategoryId(),
                     SyncAction.CREATE
             );
 
@@ -249,10 +249,10 @@ public class MoneyWiseRepository {
 
     public void updateCategory(Category category) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            category.synced = 0;
+            category.setSynced(0);
             SyncQueue syncItem = new SyncQueue(
                     "CATEGORIES",
-                    category.categoryId,
+                    category.getCategoryId(),
                     SyncAction.UPDATE
             );
 
@@ -267,7 +267,7 @@ public class MoneyWiseRepository {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             SyncQueue syncItem = new SyncQueue(
                     "CATEGORIES",
-                    category.categoryId,
+                    category.getCategoryId(),
                     SyncAction.DELETE
             );
 
@@ -281,13 +281,13 @@ public class MoneyWiseRepository {
     public void insertExpense(Expense expense) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             // Chuẩn bị dữ liệu
-            expense.synced = 0; // Đánh dấu là chưa đồng bộ
+            expense.setSynced(0); // Đánh dấu là chưa đồng bộ
             // (ID, createdAt, userId nên được gán từ ViewModel/Activity)
 
             // Tạo mục trong hàng đợi
             SyncQueue syncItem = new SyncQueue(
                     "EXPENSES",
-                    expense.expenseId,
+                    expense.getExpenseId(),
                     SyncAction.CREATE
             );
 
@@ -301,12 +301,12 @@ public class MoneyWiseRepository {
 
     public void updateExpense(Expense expense) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            expense.synced = 0; // Đánh dấu là chưa đồng bộ
-            expense.updatedAt = System.currentTimeMillis(); // Cập nhật thời gian
+            expense.setSynced(0); // Đánh dấu là chưa đồng bộ
+            expense.setUpdatedAt(System.currentTimeMillis()); // Cập nhật thời gian
 
             SyncQueue syncItem = new SyncQueue(
                     "EXPENSES",
-                    expense.expenseId,
+                    expense.getExpenseId(),
                     SyncAction.UPDATE
             );
 
@@ -323,7 +323,7 @@ public class MoneyWiseRepository {
             // mà chúng ta cần GHI LẠI HÀNH ĐỘNG XÓA
             SyncQueue syncItem = new SyncQueue(
                     "EXPENSES",
-                    expense.expenseId,
+                    expense.getExpenseId(),
                     SyncAction.DELETE
             );
 
@@ -364,7 +364,7 @@ public class MoneyWiseRepository {
             budget.synced = 0;
             SyncQueue syncItem = new SyncQueue(
                     "BUDGETS",
-                    budget.budgetId,
+                    budget.getBudgetId(),
                     SyncAction.CREATE
             );
 
@@ -394,7 +394,7 @@ public class MoneyWiseRepository {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             SyncQueue syncItem = new SyncQueue(
                     "BUDGETS",
-                    budget.budgetId,
+                    budget.getBudgetId(),
                     SyncAction.DELETE
             );
 
@@ -414,7 +414,7 @@ public class MoneyWiseRepository {
 
             SyncQueue syncItem = new SyncQueue(
                     "BUDGETS",
-                    budget.budgetId,
+                    budget.getBudgetId(),
                     SyncAction.UPDATE
             );
 
@@ -471,6 +471,20 @@ public class MoneyWiseRepository {
     public void insertBudgets_Sync(List<Budget> budgets) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             mBudgetDao.insertAll(budgets);
+        });
+    }
+
+    public void insertCategory_Sync_WithQueue(Category category) {
+        // Hàm này chạy đồng bộ (trên luồng của Executor)
+        SyncQueue syncItem = new SyncQueue(
+                "CATEGORIES",
+                category.getCategoryId(),
+                SyncAction.CREATE
+        );
+
+        mDatabase.runInTransaction(() -> {
+            mCategoryDao.insert(category);
+            mSyncQueueDao.insert(syncItem);
         });
     }
 }

@@ -66,12 +66,12 @@ public class CategoryAdapter extends ArrayAdapter<Category> {
         if (currentCategory != null) {
 
             // Đặt tên danh mục
-            textViewName.setText(currentCategory.name);
+            textViewName.setText(currentCategory.getName());
 
             // Xử lý Icon & Màu sắc (Phần này sẽ cần bạn hoàn thiện)
 
             // ----- Logic xử lý Icon (Ví dụ) -----
-            int iconResId = getIconResource(currentCategory.icon);
+            int iconResId = getIconResource(currentCategory.getIcon());
             if (iconResId != 0) { // Kiểm tra xem có tìm thấy icon không
                 imageViewIcon.setImageResource(iconResId);
             }

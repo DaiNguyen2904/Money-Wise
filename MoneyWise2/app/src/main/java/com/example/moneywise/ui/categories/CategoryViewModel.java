@@ -40,7 +40,7 @@ public class CategoryViewModel extends AndroidViewModel {
      */
     public void insert(Category category) {
         // Gán userId trước khi lưu
-        category.userId = currentUserId;
+        category.setUserId(currentUserId);
         mRepository.insertCategory(category);
     }
 
@@ -48,7 +48,7 @@ public class CategoryViewModel extends AndroidViewModel {
      * Ủy quyền hành động 'update' cho Repository
      */
     public void update(Category category) {
-        category.userId = currentUserId;
+        category.setUserId(currentUserId);
         mRepository.updateCategory(category);
     }
 

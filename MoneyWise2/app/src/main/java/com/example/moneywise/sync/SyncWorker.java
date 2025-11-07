@@ -93,7 +93,7 @@ public class SyncWorker extends Worker {
         DocumentReference docRef = mFirestore
                 .collection("users")
                 .document(userId)
-                .collection(item.tableName.toLowerCase() + "s") // "expenses", "categories", "budgets"
+                .collection(item.tableName.toLowerCase())
                 .document(item.recordId);
 
         try {
@@ -118,9 +118,6 @@ public class SyncWorker extends Worker {
                         // 3. Đẩy dữ liệu lên và CHỜ (await)
                         Log.d(TAG, "Đang đẩy (Set): " + docRef.getPath());
                         Tasks.await(docRef.set(data)); // Ghi đè (Set)
-
-                        // 4. CẬP NHẬT LẠI CỜ "synced = 1" Ở CỤC BỘ
-                        mRepository.markAsSynced_Sync(item.tableName, item.recordId);
                     }
                     break;
 

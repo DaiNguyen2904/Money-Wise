@@ -76,7 +76,7 @@ public class CategoryActivity extends AppCompatActivity {
                 Category selectedCategory = mAdapter.getItem(position);
 
                 Intent replyIntent = new Intent();
-                replyIntent.putExtra(EXTRA_SELECTED_CATEGORY_ID, selectedCategory.categoryId);
+                replyIntent.putExtra(EXTRA_SELECTED_CATEGORY_ID, selectedCategory.getCategoryId());
 
                 // GỌI HÀM setResult() CỦA ACTIVITY (Giờ đã hợp lệ)
                 setResult(Activity.RESULT_OK, replyIntent);
@@ -124,7 +124,7 @@ class CategoryPickerAdapter extends ArrayAdapter<Category> {
         ImageView imageViewIcon = listItemView.findViewById(R.id.image_view_icon);
 
         if (currentCategory != null) {
-            textViewName.setText(currentCategory.name);
+            textViewName.setText(currentCategory.getName());
             // (Bạn có thể thêm logic hiển thị icon/màu ở đây nếu muốn)
         }
 

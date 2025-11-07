@@ -16,6 +16,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -50,6 +51,15 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        // --- CÀI ĐẶT ACTIONBAR ---
+        // Lấy ActionBar từ Activity cha
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        if (activity != null && activity.getSupportActionBar() != null) {
+            ActionBar actionBar = activity.getSupportActionBar();
+            actionBar.setTitle("Danh mục"); // Đặt tiêu đề
+            actionBar.setDisplayHomeAsUpEnabled(true); // HIỂN THỊ nút quay lại
+        }
 
         // Kiểm tra Pick Mode (GIỮ NGUYÊN, nhưng dùng getArguments() thay vì getIntent())
         // (Chúng ta sẽ sửa lại phần Pick Mode này sau nếu cần, tạm thời cứ để logic Quản lý)
@@ -103,10 +113,10 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
                                 // (Tạm thời chúng ta sẽ tạo 1 đối tượng mới,
                                 //  nhưng lý tưởng nhất là bạn lấy đối tượng cũ từ CSDL)
                                 Category categoryToUpdate = new Category();
-                                categoryToUpdate.categoryId = cateId; // ID cũ
-                                categoryToUpdate.name = name;
-                                categoryToUpdate.icon = icon;
-                                categoryToUpdate.color = color;
+                                categoryToUpdate.setCategoryId(cateId);
+                                categoryToUpdate.setName(name);
+                                categoryToUpdate.setIcon(icon);
+                                categoryToUpdate.setColor(color);
                                 // (updatedAt, userId sẽ do Repository xử lý)
 
                                 mCategoryViewModel.update(categoryToUpdate);
@@ -115,11 +125,11 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
                             } else {
                                 // --- CHẾ ĐỘ THÊM MỚI ---
                                 Category newCategory = new Category();
-                                newCategory.categoryId = UUID.randomUUID().toString();
-                                newCategory.name = name;
-                                newCategory.icon = icon;
-                                newCategory.color = color;
-                                newCategory.createdAt = System.currentTimeMillis();
+                                newCategory.setCategoryId(UUID.randomUUID().toString());
+                                newCategory.setName(name);
+                                newCategory.setIcon(icon);
+                                newCategory.setColor(color);
+                                newCategory.setCreatedAt(System.currentTimeMillis());
 
                                 mCategoryViewModel.insert(newCategory);
                                 Toast.makeText(requireContext(), "Đã lưu danh mục!", Toast.LENGTH_SHORT).show();
@@ -135,10 +145,10 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
     public void onEditClick(Category category) {
         // Đây là logic cũ từ OnItemClickListener
         Intent intent = new Intent(requireContext(), AddEditCategoryActivity.class);
-        intent.putExtra(AddEditCategoryActivity.EXTRA_CATEGORY_ID, category.categoryId);
-        intent.putExtra(AddEditCategoryActivity.EXTRA_CATEGORY_NAME, category.name);
-        intent.putExtra(AddEditCategoryActivity.EXTRA_CATEGORY_ICON, category.icon);
-        intent.putExtra(AddEditCategoryActivity.EXTRA_CATEGORY_COLOR, category.color);
+        intent.putExtra(AddEditCategoryActivity.EXTRA_CATEGORY_ID, category.getCategoryId());
+        intent.putExtra(AddEditCategoryActivity.EXTRA_CATEGORY_NAME, category.getName());
+        intent.putExtra(AddEditCategoryActivity.EXTRA_CATEGORY_ICON, category.getIcon());
+        intent.putExtra(AddEditCategoryActivity.EXTRA_CATEGORY_COLOR, category.getColor());
 
         mAddEditCategoryLauncher.launch(intent);
     }
@@ -157,7 +167,7 @@ public class CategoryFragment extends Fragment implements CategoryAdapter.OnCate
     private void showDeleteConfirmationDialog(Category categoryToDelete) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Xác nhận Xóa");
-        builder.setMessage("Bạn có chắc chắn muốn xóa danh mục '" + categoryToDelete.name + "' không?");
+        builder.setMessage("Bạn có chắc chắn muốn xóa danh mục '" + categoryToDelete.getName() + "' không?");
         // (Cảnh báo: Xóa danh mục có thể ảnh hưởng đến các giao dịch cũ...)
 
         builder.setPositiveButton("Xóa", (dialog, which) -> {

@@ -1,23 +1,31 @@
 package com.example.moneywise.ui.auth;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.credentials.Credential;
+import androidx.credentials.CredentialManager;
+import androidx.credentials.CredentialManagerCallback;
+import androidx.credentials.CustomCredential;
+import androidx.credentials.GetCredentialRequest;
+import androidx.credentials.GetCredentialResponse;
+import androidx.credentials.exceptions.GetCredentialException;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 
-import com.example.moneywise.MainActivity; // Màn hình chính (Fragments)
+import com.example.moneywise.MainActivity;
 import com.example.moneywise.R;
 import com.example.moneywise.data.AppDatabase;
 import com.example.moneywise.data.entity.Budget;
@@ -26,21 +34,18 @@ import com.example.moneywise.data.entity.Expense;
 import com.example.moneywise.data.entity.User;
 import com.example.moneywise.repository.MoneyWiseRepository;
 import com.example.moneywise.sync.SyncWorker;
-import com.example.moneywise.utils.SessionManager; // Lớp tiện ích
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.common.SignInButton;
-import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.Task;
-import com.google.android.gms.tasks.Tasks;
+import com.example.moneywise.utils.SessionManager;
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential;
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,16 +57,15 @@ public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
 
-    private GoogleSignInClient mGoogleSignInClient;
     private FirebaseAuth mAuth;
-    private ActivityResultLauncher<Intent> mGoogleSignInLauncher;
     private SessionManager mSessionManager;
     private MoneyWiseRepository mRepository;
-    private ExecutorService mExecutor; // Lấy từ AppDatabase
-
-    private FirebaseFirestore mFirestore; // Cần để tải dữ liệu
-    private ProgressDialog mProgressDialog; // Hiển thị "Đang tải"
+    private ExecutorService mExecutor;
+    private FirebaseFirestore mFirestore;
+    private ProgressDialog mProgressDialog;
     private WorkManager mWorkManager;
+
+    private CredentialManager mCredentialManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,96 +78,137 @@ public class LoginActivity extends AppCompatActivity {
         mExecutor = AppDatabase.databaseWriteExecutor;
         mFirestore = FirebaseFirestore.getInstance();
         mWorkManager = WorkManager.getInstance(getApplicationContext());
+        mCredentialManager = CredentialManager.create(this);
 
-        // --- 1. KIỂM TRA XEM ĐÃ ĐĂNG NHẬP CHƯA ---
         if (mAuth.getCurrentUser() != null && mSessionManager.isLoggedIn()) {
-            // Nếu đã đăng nhập (phiên Firebase + SharedPreferences)
-            // -> Đi thẳng vào màn hình chính
             goToMainActivity();
             return;
         }
 
-        // --- 2. CẤU HÌNH GOOGLE SIGN-IN ---
-        // (Rất quan trọng: Phải yêu cầu ID Token)
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id)) // Lấy từ google-services.json
-                .requestEmail()
+        Button googleSignInButton = findViewById(R.id.btn_google_sign_in);
+        googleSignInButton.setOnClickListener(v -> signInWithGoogle());
+    }
+
+    private void signInWithGoogle() {
+        GetGoogleIdOption googleIdOption = new GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(false)
+                .setServerClientId(getString(R.string.default_web_client_id))
+                .setAutoSelectEnabled(false) // Tắt auto-select để dễ debug
+                .setNonce(null) // Không dùng nonce cho đơn giản
                 .build();
 
-        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+        GetCredentialRequest request = new GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build();
 
-        // --- 3. ĐĂNG KÝ LAUNCHER (Thay thế cho onActivityResult) ---
-        mGoogleSignInLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK) {
-                        Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
-                        try {
-                            // Lấy tài khoản Google thành công
-                            GoogleSignInAccount account = task.getResult(ApiException.class);
-                            Log.d(TAG, "Đăng nhập Google thành công, xác thực với Firebase...");
-                            // Dùng token để xác thực với Firebase
-                            firebaseAuthWithGoogle(account.getIdToken());
-                        } catch (ApiException e) {
-                            Log.w(TAG, "Đăng nhập Google thất bại", e);
-                            Toast.makeText(this, "Đăng nhập Google thất bại", Toast.LENGTH_SHORT).show();
+        showLoadingDialog("Đang đăng nhập...");
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            mCredentialManager.getCredentialAsync(
+                    this,
+                    request,
+                    null,
+                    getMainExecutor(),
+                    new CredentialManagerCallback<GetCredentialResponse, GetCredentialException>() {
+                        @Override
+                        public void onResult(GetCredentialResponse result) {
+                            handleSignIn(result);
+                        }
+
+                        @Override
+                        public void onError(@NonNull GetCredentialException e) {
+                            hideLoadingDialog();
+                            Log.e(TAG, "Credential Manager Error: ", e);
+                            Toast.makeText(LoginActivity.this,
+                                    "Đăng nhập thất bại: " + e.getMessage(),
+                                    Toast.LENGTH_LONG).show();
                         }
                     }
-                });
-
-        // --- 4. XỬ LÝ NÚT NHẤN ---
-        SignInButton googleSignInButton = findViewById(R.id.btn_google_sign_in);
-        googleSignInButton.setOnClickListener(v -> signIn());
+            );
+        }
     }
 
-    private void signIn() {
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        mGoogleSignInLauncher.launch(signInIntent);
+    private void handleSignIn(GetCredentialResponse result) {
+        Credential credential = result.getCredential();
+
+        Log.d(TAG, "Credential type: " + credential.getType());
+        Log.d(TAG, "Credential class: " + credential.getClass().getName());
+
+        // Kiểm tra nếu là GoogleIdTokenCredential
+        if (credential instanceof GoogleIdTokenCredential) {
+            GoogleIdTokenCredential googleIdTokenCredential = (GoogleIdTokenCredential) credential;
+            String idToken = googleIdTokenCredential.getIdToken();
+            Log.d(TAG, "Đăng nhập Google thành công với GoogleIdTokenCredential");
+            firebaseAuthWithGoogle(idToken);
+        }
+        // Kiểm tra nếu là CustomCredential với type GoogleIdToken
+        else if (credential instanceof CustomCredential) {
+            CustomCredential customCredential = (CustomCredential) credential;
+
+            if (GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL.equals(customCredential.getType())) {
+                // Parse CustomCredential thành GoogleIdTokenCredential
+                GoogleIdTokenCredential googleIdTokenCredential =
+                        GoogleIdTokenCredential.createFrom(customCredential.getData());
+
+                String idToken = googleIdTokenCredential.getIdToken();
+                Log.d(TAG, "Đăng nhập Google thành công với CustomCredential");
+                firebaseAuthWithGoogle(idToken);
+
+            } else {
+                // Credential type không được hỗ trợ
+                hideLoadingDialog();
+                Log.e(TAG, "Unsupported credential type: " + customCredential.getType());
+                Toast.makeText(this, "Loại xác thực không được hỗ trợ", Toast.LENGTH_SHORT).show();
+            }
+        }
+        else {
+            hideLoadingDialog();
+            Log.e(TAG, "Unexpected credential type: " + credential.getType());
+            Toast.makeText(this, "Lỗi xác thực: Loại credential không hợp lệ", Toast.LENGTH_SHORT).show();
+        }
     }
+
+// Sửa lại hàm firebaseAuthWithGoogle (Cách tốt hơn):
 
     private void firebaseAuthWithGoogle(String idToken) {
         AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
 
-        // Hiển thị "Đang đăng nhập..."
-        showLoadingDialog("Đang xác thực...");
+        mProgressDialog.setMessage("Đang xác thực...");
+        Log.d(TAG, "Chuẩn bị gọi mAuth.signInWithCredential...");
 
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, task -> {
                     if (task.isSuccessful()) {
                         Log.d(TAG, "Xác thực Firebase thành công.");
+
+                        // Lấy cờ isNewUser từ Firebase
+                        boolean isNewUser = task.getResult().getAdditionalUserInfo().isNewUser();
+
                         FirebaseUser user = mAuth.getCurrentUser();
                         String firebaseUid = user.getUid();
 
-                        // 1. Lưu ID thật (như cũ)
+                        // Bây giờ bạn có thể lưu UserId bất cứ lúc nào
                         mSessionManager.saveUserId(firebaseUid);
 
-                        schedulePeriodicSync();
-
-
-                        if (mSessionManager.isFirstLogin()) {
-                            // --- TÀI KHOẢN MỚI ---
-                            Log.d(TAG, "Lần đầu đăng nhập, tạo dữ liệu mặc định...");
-                            // (Hàm này chạy trên luồng nền)
+                        // Dùng cờ isNewUser của Firebase để quyết định
+                        if (isNewUser) {
+                            Log.d(TAG, "Lần đầu đăng nhập (isNewUser=true), tạo dữ liệu mặc định...");
                             createDefaultData(user, () -> {
+                                // TÀI KHOẢN MỚI: Cần kích hoạt để đẩy 9 danh mục lên
                                 triggerImmediateSync();
                                 hideLoadingDialog();
                                 goToMainActivity();
                             });
                         } else {
-                            // --- TÀI KHOẢN CŨ ---
-                            Log.d(TAG, "Tài khoản cũ, thực hiện tải về ban đầu...");
+                            Log.d(TAG, "Tài khoản cũ (isNewUser=false), thực hiện tải về ban đầu...");
                             mProgressDialog.setMessage("Đang tải dữ liệu của bạn...");
-                            // (Hàm này chạy trên luồng nền)
-                            performInitialSync(firebaseUid, () -> {
-                                // Sau khi tải xong, đi vào app
-                                triggerImmediateSync();
+                            performInitialSync(user, () -> {
+                                // TÀI KHOẢN CŨ: Đã tải về, không cần đẩy gì lên
                                 hideLoadingDialog();
                                 goToMainActivity();
                             });
                         }
-
                     } else {
-                        // Đăng nhập Firebase thất bại
                         Log.w(TAG, "Xác thực Firebase thất bại", task.getException());
                         hideLoadingDialog();
                         Toast.makeText(this, "Xác thực Firebase thất bại", Toast.LENGTH_SHORT).show();
@@ -171,14 +216,20 @@ public class LoginActivity extends AppCompatActivity {
                 });
     }
 
-    /**
-     * HÀM MỚI: Tải toàn bộ dữ liệu cũ từ Firebase về Room
-     * (Chạy khi isFirstLogin() == false)
-     */
-    private void performInitialSync(String userId, Runnable onComplete) {
+    private void performInitialSync(FirebaseUser user, Runnable onComplete) {
         mExecutor.execute(() -> {
             try {
-                // 1. Tạo 3 Task để lấy 3 collection
+                // --- BƯỚC BẮT BUỘC: TẠO USER TRONG ROOM TRƯỚC ---
+                // (Sao chép logic từ createDefaultData)
+                Log.d(TAG, "Đang tạo bản ghi User cục bộ cho tài khoản cũ...");
+                String userId = user.getUid();
+                String userEmail = user.getEmail();
+                String userName = user.getDisplayName();
+                User localUser = new User(userId, userEmail, userName, System.currentTimeMillis());
+                mRepository.insertUser_Sync(localUser);
+                // ----------------------------------------------------
+
+                // (Phần còn lại giữ nguyên)
                 Task<QuerySnapshot> categoriesTask = mFirestore
                         .collection("users").document(userId).collection("categories").get();
 
@@ -188,29 +239,25 @@ public class LoginActivity extends AppCompatActivity {
                 Task<QuerySnapshot> budgetsTask = mFirestore
                         .collection("users").document(userId).collection("budgets").get();
 
-                // 2. Chờ (await) cho cả 3 Task hoàn thành
                 Tasks.await(categoriesTask);
                 Tasks.await(expensesTask);
                 Tasks.await(budgetsTask);
 
-                // 3. Xử lý kết quả Categories
+                // Lệnh insert này sẽ không bị lỗi nữa
                 if (categoriesTask.isSuccessful()) {
                     List<Category> categories = categoriesTask.getResult().toObjects(Category.class);
-                    // (Đánh dấu đã đồng bộ)
-                    for(Category c : categories) c.synced = 1;
-                    mRepository.insertCategories_Sync(categories);
+                    for(Category c : categories) c.setSynced(1);
+                    mRepository.insertCategories_Sync(categories); // <--- Lỗi xảy ra ở đây
                     Log.d(TAG, "Tải về thành công " + categories.size() + " danh mục.");
                 }
 
-                // 4. Xử lý kết quả Expenses
                 if (expensesTask.isSuccessful()) {
                     List<Expense> expenses = expensesTask.getResult().toObjects(Expense.class);
-                    for(Expense e : expenses) e.synced = 1;
+                    for(Expense e : expenses) e.setSynced(1);
                     mRepository.insertExpenses_Sync(expenses);
                     Log.d(TAG, "Tải về thành công " + expenses.size() + " giao dịch.");
                 }
 
-                // 5. Xử lý kết quả Budgets
                 if (budgetsTask.isSuccessful()) {
                     List<Budget> budgets = budgetsTask.getResult().toObjects(Budget.class);
                     for(Budget b : budgets) b.synced = 1;
@@ -218,11 +265,10 @@ public class LoginActivity extends AppCompatActivity {
                     Log.d(TAG, "Tải về thành công " + budgets.size() + " ngân sách.");
                 }
 
-                // 6. Chạy về luồng UI và gọi hàm onComplete (để đi vào MainActivity)
                 runOnUiThread(onComplete);
 
             } catch (Exception e) {
-                Log.e(TAG, "Lỗi khi tải về ban đầu: ", e);
+                Log.e(TAG, "Lỗi khi tải về ban đầu: ", e); // Lỗi sẽ được log ở đây
                 runOnUiThread(() -> {
                     hideLoadingDialog();
                     Toast.makeText(this, "Lỗi khi tải dữ liệu cũ", Toast.LENGTH_LONG).show();
@@ -230,20 +276,22 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
-
     /**
-     * HÀM MỚI: (Logic này được chuyển từ AppDatabase Callback)
-     * Tạo dữ liệu mặc định cho người dùng MỚI
+     * CẬP NHẬT: Hàm này giờ sẽ chèn vào Room VÀ SYNC_QUEUE
+     * (Chạy khi isFirstLogin() == true)
      */
     private void createDefaultData(FirebaseUser user, Runnable onComplete) {
         mExecutor.execute(() -> {
-            String userId = user.getUid(); // Dùng ID thật
+            // KHÔNG CẦN try-catch ở đây nữa
+
+            String userId = user.getUid();
             String userEmail = user.getEmail();
             String userName = user.getDisplayName();
 
+            Log.d(TAG, "Đang tạo User trong Room...");
             // 1. Tạo User trong Room
             User newUser = new User(userId, userEmail, userName, System.currentTimeMillis());
-            mRepository.insertUser_Sync(newUser); // (Sẽ tạo hàm này)
+            mRepository.insertUser_Sync(newUser); // (Hàm này giữ nguyên)
 
             // 2. Tạo 9 Categories mặc định
             List<Category> defaultCategories = new ArrayList<>();
@@ -256,28 +304,20 @@ public class LoginActivity extends AppCompatActivity {
             defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Mỹ phẩm", "ic_cosmetics", "#F6FF33", 1, System.currentTimeMillis()));
             defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Quần áo", "ic_clothes", "#FF8C33", 1, System.currentTimeMillis()));
             defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Khác", "ic_other", "#808080", 1, System.currentTimeMillis()));
+            // 3. SỬA LẠI: Dùng hàm "insert" (có logic SYNC_QUEUE)
+            // Thay vì insertCategories_Sync
+            Log.d(TAG, "Đã tạo 9 danh mục, đang thêm vào Room và SYNC_QUEUE...");
+            for (Category category : defaultCategories) {
+                // Đánh dấu synced = 0 để SyncWorker đẩy lên
+                category.setSynced(0);
+                mRepository.insertCategory_Sync_WithQueue(category); // (Sẽ tạo hàm này)
+            }
 
-            mRepository.insertCategories_Sync(defaultCategories); // (Sẽ tạo hàm này)
+            // 4. Chạy về luồng UI và gọi onComplete
             runOnUiThread(onComplete);
         });
     }
 
-    // (Đây là code ví dụ cho chức năng Đăng xuất)
-//    private void handleLogout() {
-//        FirebaseAuth.getInstance().signOut(); // Đăng xuất Firebase Auth
-//        GoogleSignIn.getClient(this, gso).signOut(); // Đăng xuất Google
-//
-//        new SessionManager(this).logout(); // Xóa user_id cục bộ
-//
-//        // Dừng lắng nghe
-//        new MoneyWiseRepository(getApplication()).stopRealtimeSync();
-//
-//        // Quay về màn hình Login
-//        Intent intent = new Intent(this, LoginActivity.class);
-//        startActivity(intent);
-//        finish();
-//    }
-    // --- CÁC HÀM TIỆN ÍCH CHO LOADING DIALOG ---
     private void showLoadingDialog(String message) {
         if (mProgressDialog == null) {
             mProgressDialog = new ProgressDialog(this);
@@ -293,10 +333,6 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * HÀM MỚI: Lên lịch chạy định kỳ (1 giờ/lần)
-     * (Code này chuyển từ MyApplication sang)
-     */
     private void schedulePeriodicSync() {
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -310,16 +346,12 @@ public class LoginActivity extends AppCompatActivity {
                         .build();
 
         mWorkManager.enqueueUniquePeriodicWork(
-                "MoneyWiseSyncJob", // Tên duy nhất
-                ExistingPeriodicWorkPolicy.KEEP, // Giữ lịch cũ nếu đã có
+                "MoneyWiseSyncJob",
+                ExistingPeriodicWorkPolicy.KEEP,
                 syncRequest
         );
     }
 
-    /**
-     * HÀM MỚI: Kích hoạt một Worker chạy NGAY BÂY GIỜ
-     * (Để đẩy dữ liệu vừa tạo offline)
-     */
     private void triggerImmediateSync() {
         Constraints constraints = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -330,12 +362,17 @@ public class LoginActivity extends AppCompatActivity {
                         .setConstraints(constraints)
                         .build();
 
-        mWorkManager.enqueue(immediateSyncRequest);
+        // DÙNG enqueueUniqueWork VỚI TÊN RIÊNG
+        mWorkManager.enqueueUniqueWork(
+                "MoneyWiseSyncJob_Immediate", // Tên duy nhất cho công việc 1 lần
+                ExistingWorkPolicy.REPLACE, // Thay thế nếu có yêu cầu cũ
+                immediateSyncRequest
+        );
     }
 
     private void goToMainActivity() {
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         startActivity(intent);
-        finish(); // Đóng LoginActivity, không cho quay lại
+        finish();
     }
 }

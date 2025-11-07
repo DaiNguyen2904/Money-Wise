@@ -67,7 +67,7 @@ public class BudgetAdapter extends ArrayAdapter<BudgetStatus> {
 
             // Định dạng tiền tệ
             textSpent.setText(currencyFormat.format(currentStatus.spentAmount));
-            textTotal.setText(currencyFormat.format(currentStatus.budget.amount));
+            textTotal.setText(currencyFormat.format(currentStatus.budget.getAmount()));
 
             // Đặt tiến độ
             progressBar.setProgress(currentStatus.progressPercent);

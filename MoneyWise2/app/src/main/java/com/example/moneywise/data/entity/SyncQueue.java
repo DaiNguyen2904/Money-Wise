@@ -43,4 +43,55 @@ public class SyncQueue {
         this.timestamp = System.currentTimeMillis(); // Tự động gán thời gian
         this.retryCount = 0;
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    @NonNull
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(@NonNull String tableName) {
+        this.tableName = tableName;
+    }
+
+    @NonNull
+    public String getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(@NonNull String recordId) {
+        this.recordId = recordId;
+    }
+
+    @NonNull
+    public SyncAction getAction() {
+        return action;
+    }
+
+    public void setAction(@NonNull SyncAction action) {
+        this.action = action;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(int retryCount) {
+        this.retryCount = retryCount;
+    }
 }

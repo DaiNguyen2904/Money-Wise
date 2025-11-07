@@ -19,6 +19,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.moneywise.R;
@@ -72,6 +73,8 @@ public class AddEditBudgetActivity extends AppCompatActivity {
     private boolean isCategoryListLoaded = false;
     private boolean isBudgetDataLoaded = false;
 
+    private Toolbar mToolbar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -81,6 +84,8 @@ public class AddEditBudgetActivity extends AppCompatActivity {
         mEditTextAmount = findViewById(R.id.edit_text_amount_budget);
         mGridCategories = findViewById(R.id.grid_layout_categories_budget); // <-- CẬP NHẬT
         mBtnOtherCategory = findViewById(R.id.cat_btn_other_budget); // <-- CẬP NHẬT
+        mToolbar = findViewById(R.id.toolbar_add_edit_expense);
+        setSupportActionBar(mToolbar);
 
         mButtonSave = findViewById(R.id.button_save);
 
@@ -129,11 +134,11 @@ public class AddEditBudgetActivity extends AppCompatActivity {
         mViewModel.getLoadedBudget().observe(this, budget -> {
             if (budget != null) {
                 // 1. Điền số tiền
-                mEditTextAmount.setText(String.valueOf(budget.amount));
+                mEditTextAmount.setText(String.valueOf(budget.getAmount()));
 
                 // 2. Cố gắng highlight nút danh mục
                 isBudgetDataLoaded = true;
-                trySetButtonSelection(budget.categoryId);
+                trySetButtonSelection(budget.getCategoryId());
             }
         });
     }
@@ -224,7 +229,7 @@ public class AddEditBudgetActivity extends AppCompatActivity {
             // 1. Tạo Map để tra cứu Category bằng Tên
             Map<String, Category> categoryNameMap = new HashMap<>();
             for (Category cat : categories) {
-                categoryNameMap.put(cat.name, cat);
+                categoryNameMap.put(cat.getName(), cat);
             }
 
             // 2. Cấu hình 9 nút mặc định
@@ -242,19 +247,19 @@ public class AddEditBudgetActivity extends AppCompatActivity {
                     ImageView icon = buttonView.findViewById(R.id.image_category_icon);
                     TextView name = buttonView.findViewById(R.id.text_category_name);
 
-                    name.setText(category.name);
+                    name.setText(category.getName());
 
-                    int iconResId = getIconResource(category.icon);
+                    int iconResId = getIconResource(category.getIcon());
                     if (iconResId != 0) { // Nếu tìm thấy icon
                         icon.setImageResource(iconResId);
                     }
 
                     // Lưu ID để dùng sau
-                    mPresetIdMap.put(presetName, category.categoryId);
+                    mPresetIdMap.put(presetName, category.getCategoryId());
 
                     // Gán sự kiện
                     buttonView.setOnClickListener(v ->
-                            selectCategoryButton(category.categoryId, buttonView)
+                            selectCategoryButton(category.getCategoryId(), buttonView)
                     );
 
                 } else {
@@ -271,7 +276,7 @@ public class AddEditBudgetActivity extends AppCompatActivity {
                 otherButtonView.setVisibility(View.VISIBLE);
                 // Chỉ lưu ID của category "Khác" vào Map
                 // (Để hàm trySetSpinnerSelection() có thể tìm và highlight nút này)
-                mPresetIdMap.put(otherPresetName, otherCategory.categoryId);
+                mPresetIdMap.put(otherPresetName, otherCategory.getCategoryId());
 
                 // **QUAN TRỌNG:**
                 // Chúng ta KHÔNG cấu hình icon/text (vì layout khác, sẽ crash)
@@ -288,7 +293,7 @@ public class AddEditBudgetActivity extends AppCompatActivity {
                 // Lấy budgetId từ LiveData (nếu đã tải xong)
                 Budget budget = mViewModel.getLoadedBudget().getValue();
                 if (budget != null) {
-                    trySetButtonSelection(budget.categoryId);
+                    trySetButtonSelection(budget.getCategoryId());
                 }
             }
         });

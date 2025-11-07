@@ -49,4 +49,70 @@ public class User {
         this.createdAt = createdAt;
         this.synced = 1; // User mặc định coi như đã đồng bộ
     }
+
+    @NonNull
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(@NonNull String userId) {
+        this.userId = userId;
+    }
+
+    @NonNull
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(@NonNull String email) {
+        this.email = email;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Long updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public int getSynced() {
+        return synced;
+    }
+
+    public void setSynced(int synced) {
+        this.synced = synced;
+    }
 }

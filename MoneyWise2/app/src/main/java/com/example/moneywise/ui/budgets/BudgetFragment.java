@@ -15,6 +15,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
@@ -61,6 +62,14 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        // --- CÀI ĐẶT ACTIONBAR ---
+        // Lấy ActionBar từ Activity cha
+        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        if (activity != null && activity.getSupportActionBar() != null) {
+            ActionBar actionBar = activity.getSupportActionBar();
+            actionBar.setTitle("Ngân sách"); // Đặt tiêu đề
+            actionBar.setDisplayHomeAsUpEnabled(true); // HIỂN THỊ nút quay lại
+        }
 
 // Khởi tạo định dạng tiền
         mCurrencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
@@ -100,7 +109,7 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
                 mTotalBudgetPeriod.setText("Tháng này");
                 mTotalProgressBar.setProgress(totalStatus.progressPercent);
                 mTotalSpent.setText(mCurrencyFormat.format(totalStatus.spentAmount));
-                mTotalAmount.setText(mCurrencyFormat.format(totalStatus.budget.amount));
+                mTotalAmount.setText(mCurrencyFormat.format(totalStatus.budget.getAmount()));
             }
         });
 
@@ -174,11 +183,11 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
         Intent intent = new Intent(requireContext(), AddEditBudgetActivity.class);
 
         // Gửi dữ liệu Sửa sang
-        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_ID, budgetToEdit.budgetId);
+        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_ID, budgetToEdit.getBudgetId());
         // (Gửi 2 cái này để AddEditBudgetActivity có thể điền vào
         //  ngay cả trước khi ViewModel tải xong)
-        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_CATEGORY_ID, budgetToEdit.categoryId);
-        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_AMOUNT, budgetToEdit.amount);
+        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_CATEGORY_ID, budgetToEdit.getCategoryId());
+        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_AMOUNT, budgetToEdit.getAmount());
 
         mAddEditBudgetLauncher.launch(intent);
     }

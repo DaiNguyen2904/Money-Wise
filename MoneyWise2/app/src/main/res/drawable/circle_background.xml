@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tệp này dùng để làm nền tròn cho icon danh mục -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@android:color/darker_gray" /> <!-- Màu này sẽ bị ghi đè bởi tint -->
+</shape>

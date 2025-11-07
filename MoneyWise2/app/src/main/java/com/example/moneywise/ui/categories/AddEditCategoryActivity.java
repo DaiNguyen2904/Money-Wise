@@ -6,6 +6,7 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 import com.example.moneywise.R;
 import com.google.android.material.textfield.TextInputEditText;
@@ -28,6 +29,8 @@ public class AddEditCategoryActivity extends AppCompatActivity {
     private String mCurrentCategoryId; // Để biết đang ở chế độ Sửa hay không
     private boolean isEditMode = false;
 
+    private Toolbar mToolbar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +41,8 @@ public class AddEditCategoryActivity extends AppCompatActivity {
         mEditTextIcon = findViewById(R.id.edit_text_category_icon);
         mEditTextColor = findViewById(R.id.edit_text_category_color);
         mButtonSave = findViewById(R.id.button_save_category);
+        mToolbar = findViewById(R.id.toolbar_add_edit_category);
+        setSupportActionBar(mToolbar);
 
         // 2. Kiểm tra Intent để xem là "Thêm" hay "Sửa"
         Intent intent = getIntent();
