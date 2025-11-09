@@ -81,7 +81,9 @@ public class ExpenseFragment extends Fragment implements ExpenseAdapter.OnExpens
         // 3. Lấy ViewModel (thay 'this' bằng 'this' hoặc 'requireActivity()')
         ViewModelProvider.AndroidViewModelFactory factory =
                 ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication());
-        mExpenseViewModel = new ViewModelProvider(this).get(ExpenseViewModel.class);
+        mExpenseViewModel = new ViewModelProvider(this, factory).get(ExpenseViewModel.class);
+
+        mExpenseViewModel.init();
 
         // 4. Theo dõi LiveData (thay 'this' bằng 'getViewLifecycleOwner()')
         mExpenseViewModel.getFilteredExpenses().observe(getViewLifecycleOwner(), items -> {

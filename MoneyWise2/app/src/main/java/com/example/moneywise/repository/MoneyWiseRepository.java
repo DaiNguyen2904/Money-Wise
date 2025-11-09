@@ -118,7 +118,7 @@ public class MoneyWiseRepository {
                         // --- SỬA LỖI ---
                         // Đổi Category.class -> Budget.class
                         Budget budget = dc.getDocument().toObject(Budget.class);
-                        budget.synced = 1;
+                        budget.setSynced(1);
 
                         // Gọi đúng các hàm _Sync của Budget
                         switch (dc.getType()) {
@@ -361,7 +361,7 @@ public class MoneyWiseRepository {
 
     public void insertBudget(Budget budget) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            budget.synced = 0;
+            budget.setSynced(0);
             SyncQueue syncItem = new SyncQueue(
                     "BUDGETS",
                     budget.getBudgetId(),
@@ -410,7 +410,7 @@ public class MoneyWiseRepository {
     }
     public void updateBudget(Budget budget) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
-            budget.synced = 0; // Đánh dấu là chưa đồng bộ
+            budget.setSynced(0);
 
             SyncQueue syncItem = new SyncQueue(
                     "BUDGETS",
@@ -424,10 +424,15 @@ public class MoneyWiseRepository {
             });
         });
     }
+
+    public User getUserById_Sync(String id) {
+        // Hàm này chạy đồng bộ (sẽ được gọi từ Executor của LoginActivity)
+        return mUserDao.getUserById_Sync(id);
+    }
     // --- THÊM 2 HÀM NÀY (Cho LoginActivity) ---
     public void insertUser_Sync(User user) {
         // Hàm này chạy đồng bộ (trên luồng đã gọi nó)
-        user.synced = 1; // User này lấy từ Firebase, coi như đã đồng bộ
+        user.setSynced(1); // User này lấy từ Firebase, coi như đã đồng bộ
         mUserDao.insert(user);
         // (Không cần SYNC_QUEUE vì đang tạo user)
     }

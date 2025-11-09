@@ -65,12 +65,12 @@ public class SyncWorker extends Worker {
                 if (isSuccess) {
                     // 3. Nếu thành công: Xóa mục khỏi hàng đợi
                     mRepository.deleteSyncItem(item);
-                    Log.d(TAG, "Đồng bộ thành công: " + item.recordId);
+                    Log.d(TAG, "Đồng bộ thành công: " + item.getRecordId());
                 } else {
                     // 4. Nếu thất bại: Tăng số lần thử lại
-                    item.retryCount = item.retryCount + 1;
+                    item.setRetryCount(item.getRetryCount() + 1);
                     mRepository.updateSyncItem(item);
-                    Log.w(TAG, "Đồng bộ thất bại, thử lại sau: " + item.recordId);
+                    Log.w(TAG, "Đồng bộ thất bại, thử lại sau: " + item.getRecordId());
                 }
             }
 
@@ -93,24 +93,24 @@ public class SyncWorker extends Worker {
         DocumentReference docRef = mFirestore
                 .collection("users")
                 .document(userId)
-                .collection(item.tableName.toLowerCase())
-                .document(item.recordId);
+                .collection(item.getTableName().toLowerCase())
+                .document(item.getRecordId());
 
         try {
-            switch (item.action) {
+            switch (item.getAction()) {
                 case CREATE:
                 case UPDATE:
                     // 2. Lấy dữ liệu đầy đủ từ CSDL Room
                     Object data = null;
-                    switch (item.tableName) {
+                    switch (item.getTableName()) {
                         case "EXPENSES":
-                            data = mRepository.getExpenseById_Sync(item.recordId);
+                            data = mRepository.getExpenseById_Sync(item.getRecordId());
                             break;
                         case "CATEGORIES":
-                            data = mRepository.getCategoryById_Sync(item.recordId);
+                            data = mRepository.getCategoryById_Sync(item.getRecordId());
                             break;
                         case "BUDGETS":
-                            data = mRepository.getBudgetById_Sync(item.recordId);
+                            data = mRepository.getBudgetById_Sync(item.getRecordId());
                             break;
                     }
 
@@ -132,7 +132,7 @@ public class SyncWorker extends Worker {
 
         } catch (Exception e) {
             // Ví dụ: Mất kết nối, Firebase lỗi quyền...
-            Log.e(TAG, "Lỗi khi đẩy lên Firebase: " + item.recordId, e);
+            Log.e(TAG, "Lỗi khi đẩy lên Firebase: " + item.getRecordId(), e);
             return false; // Thất bại
         }
     }

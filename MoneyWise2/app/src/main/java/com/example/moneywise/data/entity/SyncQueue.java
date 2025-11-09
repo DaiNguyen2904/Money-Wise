@@ -14,25 +14,25 @@ public class SyncQueue {
 
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
-    public int id;
+    private int id;
 
     @NonNull
     @ColumnInfo(name = "table_name")
-    public String tableName; // "EXPENSES", "CATEGORIES", v.v.
+    private String tableName; // "EXPENSES", "CATEGORIES", v.v.
 
     @NonNull
     @ColumnInfo(name = "record_id")
-    public String recordId; // UUID của bản ghi
+    private String recordId; // UUID của bản ghi
 
     @NonNull
     @ColumnInfo(name = "action")
-    public SyncAction action; // "CREATE", "UPDATE", "DELETE"
+    private SyncAction action; // "CREATE", "UPDATE", "DELETE"
 
     @ColumnInfo(name = "timestamp")
-    public long timestamp;
+    private long timestamp;
 
     @ColumnInfo(name = "retry_count")
-    public int retryCount;
+    private int retryCount;
 
     public SyncQueue() {}
 

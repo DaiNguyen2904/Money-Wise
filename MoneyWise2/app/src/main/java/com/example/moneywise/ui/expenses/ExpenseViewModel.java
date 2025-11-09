@@ -42,6 +42,8 @@ public class ExpenseViewModel extends AndroidViewModel {
 
     private String currentUserId;
 
+    private boolean isInitialized = false; // Cờ để tránh khởi tạo lại
+
     // (Bạn cũng có thể thêm LiveData cho Categories, Budgets nếu màn hình này cần)
 
     // 3. Constructor
@@ -50,17 +52,43 @@ public class ExpenseViewModel extends AndroidViewModel {
         mRepository = new MoneyWiseRepository(application);
 
         // Giả sử chúng ta có một ID người dùng cố định (bạn sẽ thay thế bằng ID thật)
-        SessionManager sessionManager = new SessionManager(application);
+//        SessionManager sessionManager = new SessionManager(application);
+//        currentUserId = sessionManager.getUserId(); // Lấy ID đã lưu
+//        mAllExpensesRepo = mRepository.getAllExpenses(currentUserId);
+//        mAllCategoriesRepo = mRepository.getAllCategories(currentUserId); // Cần lấy danh mục
+//
+//        // Thêm các nguồn vào MediatorLiveData
+//        mFilteredExpenses.addSource(mAllExpensesRepo, expenses -> combineAndFilter());
+//        mFilteredExpenses.addSource(mAllCategoriesRepo, categories -> combineAndFilter());
+        mFilteredExpenses.addSource(mSearchQuery, query -> combineAndFilter());
+
+
+    }
+
+    /**
+     * HÀM MỚI: Fragment sẽ gọi hàm này
+     */
+    public void init() {
+        if (isInitialized) {
+            return; // Đã khởi tạo rồi, không làm gì
+        }
+
+        SessionManager sessionManager = new SessionManager(getApplication());
         currentUserId = sessionManager.getUserId(); // Lấy ID đã lưu
+
+        if (currentUserId == null) {
+            return; // Chưa có user, không thể truy vấn
+        }
+
+        // Khởi tạo các nguồn LiveData
         mAllExpensesRepo = mRepository.getAllExpenses(currentUserId);
-        mAllCategoriesRepo = mRepository.getAllCategories(currentUserId); // Cần lấy danh mục
+        mAllCategoriesRepo = mRepository.getAllCategories(currentUserId);
 
         // Thêm các nguồn vào MediatorLiveData
         mFilteredExpenses.addSource(mAllExpensesRepo, expenses -> combineAndFilter());
         mFilteredExpenses.addSource(mAllCategoriesRepo, categories -> combineAndFilter());
-        mFilteredExpenses.addSource(mSearchQuery, query -> combineAndFilter());
 
-
+        isInitialized = true; // Đánh dấu đã khởi tạo
     }
 
     /**
@@ -72,6 +100,10 @@ public class ExpenseViewModel extends AndroidViewModel {
      * 5. Đẩy (post) danh sách cuối cùng
      */
     private void combineAndFilter() {
+        if (mAllExpensesRepo == null || mAllCategoriesRepo == null) {
+            return; // Chưa được init()
+        }
+
         List<Expense> expenses = mAllExpensesRepo.getValue();
         List<Category> categories = mAllCategoriesRepo.getValue();
         String query = mSearchQuery.getValue();

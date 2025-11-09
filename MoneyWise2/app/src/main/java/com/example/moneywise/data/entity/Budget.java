@@ -9,6 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.room.TypeConverters;
 
 import com.example.moneywise.utils.Converters;
+import com.google.firebase.firestore.PropertyName;
 
 @Entity(
         tableName = "BUDGETS",
@@ -29,97 +30,76 @@ import com.example.moneywise.utils.Converters;
         indices = {@Index(value = "user_id"), @Index(value = "category_id")}
 )
 public class Budget {
-
     @PrimaryKey
     @NonNull
     @ColumnInfo(name = "budget_id")
-    private String budgetId; // UUID
+    @PropertyName("budgetId") // <-- THÊM
+    private String budgetId;
 
     @NonNull
     @ColumnInfo(name = "user_id")
+    @PropertyName("userId") // <-- THÊM
     private String userId;
 
     @ColumnInfo(name = "category_id")
-    private String categoryId; // Cho phép null (cho ngân sách tổng)
+    @PropertyName("categoryId") // <-- THÊM
+    private String categoryId;
 
     @ColumnInfo(name = "amount")
+    @PropertyName("amount") // <-- THÊM
     private double amount;
 
     @ColumnInfo(name = "created_at")
+    @PropertyName("createdAt") // <-- THÊM
     private long createdAt;
 
     @ColumnInfo(name = "updated_at")
-    public Long updatedAt; // Cho phép null
+    @PropertyName("updatedAt") // <-- THÊM
+    private Long updatedAt;
 
     @ColumnInfo(name = "synced")
-    public int synced;
+    private int synced; // (Không cần)
 
     public Budget() {}
 
     public Budget(@NonNull String budgetId, @NonNull String userId, String categoryId, double amount, long createdAt) {
-        this.budgetId = budgetId;
-        this.userId = userId;
-        this.categoryId = categoryId;
-        this.amount = amount;
-        this.createdAt = createdAt;
-        this.synced = 0; // Mặc định khi tạo
+// ... (code constructor giữ nguyên) ...
     }
+
+    // --- THÊM @PropertyName VÀO GETTERS/SETTERS ---
+    @NonNull
+    @PropertyName("budgetId") // <-- THÊM
+    public String getBudgetId() { return budgetId; }
+    @PropertyName("budgetId") // <-- THÊM
+    public void setBudgetId(@NonNull String budgetId) { this.budgetId = budgetId; }
 
     @NonNull
-    public String getBudgetId() {
-        return budgetId;
-    }
+    @PropertyName("userId") // <-- THÊM
+    public String getUserId() { return userId; }
+    @PropertyName("userId") // <-- THÊM
+    public void setUserId(@NonNull String userId) { this.userId = userId; }
 
-    public void setBudgetId(@NonNull String budgetId) {
-        this.budgetId = budgetId;
-    }
+    @PropertyName("categoryId") // <-- THÊM
+    public String getCategoryId() { return categoryId; }
+    @PropertyName("categoryId") // <-- THÊM
+    public void setCategoryId(String categoryId) { this.categoryId = categoryId; }
 
-    @NonNull
-    public String getUserId() {
-        return userId;
-    }
+    @PropertyName("amount") // <-- THÊM
+    public double getAmount() { return amount; }
+    @PropertyName("amount") // <-- THÊM
+    public void setAmount(double amount) { this.amount = amount; }
 
-    public void setUserId(@NonNull String userId) {
-        this.userId = userId;
-    }
+    @PropertyName("createdAt") // <-- THÊM
+    public long getCreatedAt() { return createdAt; }
+    @PropertyName("createdAt") // <-- THÊM
+    public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
 
-    public String getCategoryId() {
-        return categoryId;
-    }
+    @PropertyName("updatedAt") // <-- THÊM
+    public Long getUpdatedAt() { return updatedAt; }
+    @PropertyName("updatedAt") // <-- THÊM
+    public void setUpdatedAt(Long updatedAt) { this.updatedAt = updatedAt; }
 
-    public void setCategoryId(String categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public double getAmount() {
-        return amount;
-    }
-
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(long createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Long getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Long updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public int getSynced() {
-        return synced;
-    }
-
-    public void setSynced(int synced) {
-        this.synced = synced;
-    }
+    // (synced không cần)
+    public int getSynced() { return synced; }
+    public void setSynced(int synced) { this.synced = synced; }
 }

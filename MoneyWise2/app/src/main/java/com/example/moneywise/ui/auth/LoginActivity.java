@@ -200,13 +200,36 @@ public class LoginActivity extends AppCompatActivity {
                                 goToMainActivity();
                             });
                         } else {
-                            Log.d(TAG, "Tài khoản cũ (isNewUser=false), thực hiện tải về ban đầu...");
-                            mProgressDialog.setMessage("Đang tải dữ liệu của bạn...");
-                            performInitialSync(user, () -> {
-                                // TÀI KHOẢN CŨ: Đã tải về, không cần đẩy gì lên
-                                hideLoadingDialog();
-                                goToMainActivity();
+                            // --- SỬA LỖI A: KIỂM TRA CSDL CỤC BỘ TRƯỚC ---
+                            Log.d(TAG, "Tài khoản cũ (isNewUser=false), kiểm tra CSDL cục bộ...");
+                            mExecutor.execute(() -> {
+                                // Kiểm tra xem user đã tồn tại trong Room chưa
+                                User localUser = mRepository.getUserById_Sync(firebaseUid);
+                                if (localUser == null) {
+                                    // CSDL cục bộ rỗng (ví dụ: cài lại app)
+                                    // -> Chạy tải về ban đầu
+                                    Log.d(TAG, "CSDL cục bộ rỗng. Đang chạy performInitialSync...");
+                                    runOnUiThread(() -> mProgressDialog.setMessage("Đang tải dữ liệu của bạn..."));
+                                    performInitialSync(user, () -> {
+                                        runOnUiThread(() -> {
+                                            hideLoadingDialog();
+                                            goToMainActivity();
+                                        });
+                                    });
+                                } else {
+                                    // CSDL cục bộ ĐÃ CÓ DỮ LIỆU
+                                    // -> Không chạy tải về ban đầu (để tránh ghi đè)
+                                    // -> Chỉ cần kích hoạt SyncWorker để đẩy
+                                    //    các thay đổi (Sửa/Xóa) đang chờ
+                                    Log.d(TAG, "CSDL cục bộ đã có. Kích hoạt SyncWorker và vào app.");
+                                    triggerImmediateSync();
+                                    runOnUiThread(() -> {
+                                        hideLoadingDialog();
+                                        goToMainActivity();
+                                    });
+                                }
                             });
+                            // --- KẾT THÚC SỬA LỖI A ---
                         }
                     } else {
                         Log.w(TAG, "Xác thực Firebase thất bại", task.getException());
@@ -260,12 +283,12 @@ public class LoginActivity extends AppCompatActivity {
 
                 if (budgetsTask.isSuccessful()) {
                     List<Budget> budgets = budgetsTask.getResult().toObjects(Budget.class);
-                    for(Budget b : budgets) b.synced = 1;
+                    for(Budget b : budgets) b.setSynced(1);
                     mRepository.insertBudgets_Sync(budgets);
                     Log.d(TAG, "Tải về thành công " + budgets.size() + " ngân sách.");
                 }
 
-                runOnUiThread(onComplete);
+                onComplete.run();
 
             } catch (Exception e) {
                 Log.e(TAG, "Lỗi khi tải về ban đầu: ", e); // Lỗi sẽ được log ở đây

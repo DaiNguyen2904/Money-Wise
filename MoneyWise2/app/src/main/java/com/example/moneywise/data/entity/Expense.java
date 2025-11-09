@@ -7,6 +7,8 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import androidx.annotation.NonNull;
 
+import com.google.firebase.firestore.PropertyName;
+
 @Entity(
         tableName = "EXPENSES",
         foreignKeys = {
@@ -30,117 +32,100 @@ public class Expense {
     @PrimaryKey
     @NonNull
     @ColumnInfo(name = "expense_id")
-    private String expenseId; // UUID
+    @PropertyName("expenseId") // Giả sử trên Firestore là "expenseId"
+    private String expenseId;
 
     @NonNull
     @ColumnInfo(name = "user_id")
+    @PropertyName("userId") // Giả sử trên Firestore là "userId"
     private String userId;
 
     @ColumnInfo(name = "category_id")
-    private String categoryId; // Cho phép null
+    @PropertyName("categoryId") // Giả sử trên Firestore là "categoryId"
+    private String categoryId;
 
     @ColumnInfo(name = "amount")
+    @PropertyName("amount")
     private double amount;
 
     @ColumnInfo(name = "note")
+    @PropertyName("note")
     private String note;
 
     @ColumnInfo(name = "date")
-    private long date; // Ngày giao dịch (Timestamp)
+    @PropertyName("date")
+    private long date;
 
     @ColumnInfo(name = "payment_method")
+    @PropertyName("paymentMethod")
     private String paymentMethod;
 
     @ColumnInfo(name = "created_at")
+    @PropertyName("createdAt")
     private long createdAt;
 
     @ColumnInfo(name = "updated_at")
-    private Long updatedAt; // Cho phép null
+    @PropertyName("updatedAt")
+    private Long updatedAt;
 
     @ColumnInfo(name = "synced")
+    // Chúng ta không cần @PropertyName cho 'synced'
+    // vì chúng ta không muốn đọc/ghi nó từ Firestore
     private int synced;
 
     public Expense() {}
 
+    // --- SỬA LẠI GETTERS ĐỂ DÙNG @PropertyName ---
+    // (Lưu ý: Firestore dùng getters/setters, không dùng biến trực tiếp)
     @NonNull
-    public String getExpenseId() {
-        return expenseId;
-    }
-
-    public void setExpenseId(@NonNull String expenseId) {
-        this.expenseId = expenseId;
-    }
+    @PropertyName("expenseId")
+    public String getExpenseId() { return expenseId; }
+    @PropertyName("expenseId")
+    public void setExpenseId(@NonNull String expenseId) { this.expenseId = expenseId; }
 
     @NonNull
-    public String getUserId() {
-        return userId;
-    }
+    @PropertyName("userId")
+    public String getUserId() { return userId; }
+    @PropertyName("userId")
+    public void setUserId(@NonNull String userId) { this.userId = userId; }
 
-    public void setUserId(@NonNull String userId) {
-        this.userId = userId;
-    }
+    @PropertyName("categoryId")
+    public String getCategoryId() { return categoryId; }
+    @PropertyName("categoryId")
+    public void setCategoryId(String categoryId) { this.categoryId = categoryId; }
 
-    public String getCategoryId() {
-        return categoryId;
-    }
+    @PropertyName("amount")
+    public double getAmount() { return amount; }
+    @PropertyName("amount")
+    public void setAmount(double amount) { this.amount = amount; }
 
-    public void setCategoryId(String categoryId) {
-        this.categoryId = categoryId;
-    }
+    @PropertyName("note")
+    public String getNote() { return note; }
+    @PropertyName("note")
+    public void setNote(String note) { this.note = note; }
 
-    public double getAmount() {
-        return amount;
-    }
+    @PropertyName("date")
+    public long getDate() { return date; }
+    @PropertyName("date")
+    public void setDate(long date) { this.date = date; }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
-    }
+    @PropertyName("paymentMethod")
+    public String getPaymentMethod() { return paymentMethod; }
+    @PropertyName("paymentMethod")
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
 
-    public String getNote() {
-        return note;
-    }
+    @PropertyName("createdAt")
+    public long getCreatedAt() { return createdAt; }
+    @PropertyName("createdAt")
+    public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
 
-    public void setNote(String note) {
-        this.note = note;
-    }
+    @PropertyName("updatedAt")
+    public Long getUpdatedAt() { return updatedAt; }
+    @PropertyName("updatedAt")
+    public void setUpdatedAt(Long updatedAt) { this.updatedAt = updatedAt; }
 
-    public long getDate() {
-        return date;
-    }
-
-    public void setDate(long date) {
-        this.date = date;
-    }
-
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
-    public long getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(long createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Long getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Long updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public int getSynced() {
-        return synced;
-    }
-
-    public void setSynced(int synced) {
-        this.synced = synced;
-    }
+    // 'synced' không cần @PropertyName
+    public int getSynced() { return synced; }
+    public void setSynced(int synced) { this.synced = synced; }
+    // --- KẾT THÚC SỬA LỖI B ---
 }

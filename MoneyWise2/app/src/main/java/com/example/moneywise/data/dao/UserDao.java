@@ -22,4 +22,10 @@ public interface UserDao {
     // Lấy thông tin user (dùng LiveData để UI tự cập nhật khi có thay đổi)
     @Query("SELECT * FROM USERS WHERE user_id = :userId LIMIT 1")
     LiveData<User> getUserById(String userId);
+
+    // --- HÀM MỚI ---
+    // Lấy user đồng bộ (không dùng LiveData)
+    // Dùng cho LoginActivity và Repository
+    @Query("SELECT * FROM USERS WHERE user_id = :userId LIMIT 1")
+    User getUserById_Sync(String userId);
 }

@@ -173,7 +173,7 @@ public class BudgetViewModel extends AndroidViewModel {
     public void update(Budget budget) {
         // Gán userId và thời gian
         budget.setUserId(currentUserId);
-        budget.updatedAt = System.currentTimeMillis();
+        budget.setUpdatedAt(System.currentTimeMillis());
         mRepository.updateBudget(budget); // (Sẽ tạo ở bước sau)
     }
 
