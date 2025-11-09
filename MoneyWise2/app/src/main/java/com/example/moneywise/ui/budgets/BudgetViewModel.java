@@ -13,6 +13,7 @@ import com.example.moneywise.data.entity.Category;
 import com.example.moneywise.data.entity.Expense;
 import com.example.moneywise.data.model.BudgetStatus;
 import com.example.moneywise.repository.MoneyWiseRepository;
+import com.example.moneywise.utils.SessionManager;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -23,7 +24,7 @@ import java.util.Map;
 public class BudgetViewModel extends AndroidViewModel {
 
     private MoneyWiseRepository mRepository;
-    private String currentUserId = "USER_ID_TAM_THOI"; // TODO: Thay thế ID thật
+    private String currentUserId;
 
     // 1 nguồn dữ liệu
     private LiveData<List<Category>> mAllCategories;
@@ -41,7 +42,8 @@ public class BudgetViewModel extends AndroidViewModel {
         mRepository = new MoneyWiseRepository(application);
         mBudgetStatuses = new MediatorLiveData<>();
 
-        String currentUserId = "USER_ID_TAM_THOI"; // TODO: Thay ID thật
+        SessionManager sessionManager = new SessionManager(application);
+        currentUserId = sessionManager.getUserId(); // Lấy ID đã lưu
 
         // Lấy 3 nguồn (SỬA: Dùng getAllBudgets)
         mAllBudgets = mRepository.getAllBudgets(currentUserId);
@@ -95,7 +97,7 @@ public class BudgetViewModel extends AndroidViewModel {
         // (Tạo categoryMap như cũ)
         Map<String, String> categoryMap = new HashMap<>();
         for (Category category : categories) {
-            categoryMap.put(category.categoryId, category.name);
+            categoryMap.put(category.getCategoryId(), category.getName());
         }
 
         List<BudgetStatus> newStatusList = new ArrayList<>();
@@ -108,29 +110,29 @@ public class BudgetViewModel extends AndroidViewModel {
         // (Chúng ta sẽ tính tổng chi tiêu CỦA TOÀN BỘ CÁC MỤC)
         // (Logic này chính xác hơn)
         for(Expense expense : expenses) {
-            if (expense.date >= startOfMonth && expense.date <= endOfMonth) {
-                totalSpentThisMonth += expense.amount;
+            if (expense.getDate() >= startOfMonth && expense.getDate() <= endOfMonth) {
+                totalSpentThisMonth += expense.getAmount();
             }
         }
 
         for (Budget budget : budgets) {
             double categorySpent = 0; // Chi tiêu cho danh mục này
             for (Expense expense : expenses) {
-                if (expense.date >= startOfMonth && expense.date <= endOfMonth) {
-                    if (budget.categoryId != null && budget.categoryId.equals(expense.categoryId)) {
-                        categorySpent += expense.amount;
+                if (expense.getDate() >= startOfMonth && expense.getDate() <= endOfMonth) {
+                    if (budget.getCategoryId() != null && budget.getCategoryId().equals(expense.getCategoryId())) {
+                        categorySpent += expense.getAmount();
                     }
                 }
             }
 
             // Cộng vào tổng ngân sách
-            totalBudgeted += budget.amount;
+            totalBudgeted += budget.getAmount();
 
             // ... (Logic tính % và add vào newStatusList... như cũ)
-            String budgetName = categoryMap.getOrDefault(budget.categoryId, "Danh mục đã xóa");
+            String budgetName = categoryMap.getOrDefault(budget.getCategoryId(), "Danh mục đã xóa");
             int progress = 0;
-            if (budget.amount > 0) {
-                progress = (int) ((categorySpent / budget.amount) * 100);
+            if (budget.getAmount() > 0) {
+                progress = (int) ((categorySpent / budget.getAmount()) * 100);
             }
             newStatusList.add(new BudgetStatus(budget, budgetName, categorySpent, progress));
         }
@@ -139,7 +141,7 @@ public class BudgetViewModel extends AndroidViewModel {
 
         // Tạo một đối tượng Budget "ảo" để chứa tổng
         Budget totalBudgetInfo = new Budget();
-        totalBudgetInfo.amount = totalBudgeted; // Giới hạn là tổng
+        totalBudgetInfo.setAmount(totalBudgeted);
 
         int totalProgress = 0;
         if (totalBudgeted > 0) {
@@ -161,11 +163,18 @@ public class BudgetViewModel extends AndroidViewModel {
      */
     public void insert(Budget budget) {
         // Gán userId và các giá trị mặc định
-        budget.userId = currentUserId;
-        budget.createdAt = System.currentTimeMillis();
+        budget.setUserId(currentUserId);
+        budget.setCreatedAt(System.currentTimeMillis());
         // (synced, updatedAt sẽ do Repository xử lý)
 
         mRepository.insertBudget(budget); // (Chúng ta sẽ cần tạo hàm này trong Repository)
+    }
+
+    public void update(Budget budget) {
+        // Gán userId và thời gian
+        budget.setUserId(currentUserId);
+        budget.setUpdatedAt(System.currentTimeMillis());
+        mRepository.updateBudget(budget); // (Sẽ tạo ở bước sau)
     }
 
     public void delete(Budget budget) {

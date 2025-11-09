@@ -1,5 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
+
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -32,6 +34,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.firebase.firestore)
     val room_version = "2.8.3"
     val work_version = "2.11.0"
 
@@ -65,5 +68,23 @@ dependencies {
     // optional - Paging 3 Integration
     implementation("androidx.room:room-paging:$room_version")
 
+    implementation("com.google.guava:guava:31.1-android")
+
     implementation("androidx.work:work-runtime:${work_version}")
+
+    implementation(platform("com.google.firebase:firebase-bom:34.5.0"))
+
+    // 2. Thư viện Xác thực (Authentication) - Dùng cho Bước 2
+    implementation ("com.google.firebase:firebase-auth")
+    implementation ("com.google.android.gms:play-services-auth:21.4.0")
+
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 }
+
+
+

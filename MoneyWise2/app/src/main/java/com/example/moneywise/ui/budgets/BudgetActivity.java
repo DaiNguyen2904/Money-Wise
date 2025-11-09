@@ -77,9 +77,9 @@ public class BudgetActivity extends AppCompatActivity implements BudgetAdapter.O
 
                             // Tạo đối tượng Budget mới
                             Budget newBudget = new Budget();
-                            newBudget.budgetId = UUID.randomUUID().toString();
-                            newBudget.categoryId = categoryId;
-                            newBudget.amount = amount;
+                            newBudget.setBudgetId( UUID.randomUUID().toString());
+                            newBudget.setCategoryId(categoryId);
+                            newBudget.setAmount(amount);
 
                             // Gọi ViewModel để chèn
                             mBudgetViewModel.insert(newBudget);

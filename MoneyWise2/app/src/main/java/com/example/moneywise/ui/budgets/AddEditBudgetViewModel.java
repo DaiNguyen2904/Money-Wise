@@ -4,10 +4,14 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 
+import com.example.moneywise.data.AppDatabase;
+import com.example.moneywise.data.entity.Budget;
 import com.example.moneywise.data.entity.Category;
 import com.example.moneywise.repository.MoneyWiseRepository;
+import com.example.moneywise.utils.SessionManager;
 
 import java.util.List;
 
@@ -16,11 +20,30 @@ public class AddEditBudgetViewModel extends AndroidViewModel {
     private MoneyWiseRepository mRepository;
     private LiveData<List<Category>> mAllCategories;
 
+    private String currentUserId;
+
+    // Dùng MutableLiveData để chứa Budget đang được sửa
+
+    private MutableLiveData<Budget> mLoadedBudget = new MutableLiveData<>();
+
+    public LiveData<Budget> getLoadedBudget() {
+        return mLoadedBudget;
+    }
+
+    public void loadBudget(String budgetId) {
+        // (Chúng ta sẽ cần hàm _Sync trong Repository)
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            Budget budget = mRepository.getBudgetById_Sync(budgetId);
+            mLoadedBudget.postValue(budget);
+        });
+    }
+
     public AddEditBudgetViewModel(@NonNull Application application) {
         super(application);
         mRepository = new MoneyWiseRepository(application);
 
-        String currentUserId = "USER_ID_TAM_THOI"; // TODO: Thay thế ID thật
+        SessionManager sessionManager = new SessionManager(application);
+        currentUserId = sessionManager.getUserId(); // Lấy ID đã lưu
         mAllCategories = mRepository.getAllCategories(currentUserId);
     }
 

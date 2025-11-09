@@ -14,25 +14,25 @@ public class SyncQueue {
 
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
-    public int id;
+    private int id;
 
     @NonNull
     @ColumnInfo(name = "table_name")
-    public String tableName; // "EXPENSES", "CATEGORIES", v.v.
+    private String tableName; // "EXPENSES", "CATEGORIES", v.v.
 
     @NonNull
     @ColumnInfo(name = "record_id")
-    public String recordId; // UUID của bản ghi
+    private String recordId; // UUID của bản ghi
 
     @NonNull
     @ColumnInfo(name = "action")
-    public SyncAction action; // "CREATE", "UPDATE", "DELETE"
+    private SyncAction action; // "CREATE", "UPDATE", "DELETE"
 
     @ColumnInfo(name = "timestamp")
-    public long timestamp;
+    private long timestamp;
 
     @ColumnInfo(name = "retry_count")
-    public int retryCount;
+    private int retryCount;
 
     public SyncQueue() {}
 
@@ -42,5 +42,56 @@ public class SyncQueue {
         this.action = action;
         this.timestamp = System.currentTimeMillis(); // Tự động gán thời gian
         this.retryCount = 0;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    @NonNull
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(@NonNull String tableName) {
+        this.tableName = tableName;
+    }
+
+    @NonNull
+    public String getRecordId() {
+        return recordId;
+    }
+
+    public void setRecordId(@NonNull String recordId) {
+        this.recordId = recordId;
+    }
+
+    @NonNull
+    public SyncAction getAction() {
+        return action;
+    }
+
+    public void setAction(@NonNull SyncAction action) {
+        this.action = action;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(int retryCount) {
+        this.retryCount = retryCount;
     }
 }

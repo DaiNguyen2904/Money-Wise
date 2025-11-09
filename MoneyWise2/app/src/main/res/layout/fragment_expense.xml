@@ -1,23 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Đổi root thành LinearLayout để chứa SearchView -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ui.expenses.ExpenseFragment">
 
+    <!-- 1. Hộp Tìm kiếm MỚI -->
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/search_view_expense"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:iconifiedByDefault="false"
+        app:queryHint="Tìm theo ghi chú, danh mục, số tiền..."
+        android:background="@android:color/white"
+        android:elevation="4dp"
+        android:paddingBottom="8dp"/>
+
+    <!-- 2. ListView cũ (thêm layout_weight) -->
     <ListView
         android:id="@+id/list_view_expenses"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="8dp"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="8.0sp" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        tools:listitem="@layout/list_item_expense" />
 
+    <!-- 3. FAB cũ (chuyển vào trong RelativeLayout hoặc CoordinatorLayout
+         trong file activity_main.xml sẽ tốt hơn, nhưng tạm thời để đây) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add_expense"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
+        android:contentDescription="Thêm chi tiêu mới"
         app:srcCompat="@android:drawable/ic_input_add" />
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+</LinearLayout>

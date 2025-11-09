@@ -54,57 +54,57 @@ public abstract class AppDatabase extends RoomDatabase {
     public static final ExecutorService databaseWriteExecutor =
             Executors.newFixedThreadPool(NUMBER_OF_THREADS);
 
-    private static RoomDatabase.Callback sRoomDatabaseCallback = new RoomDatabase.Callback() {
-
-        /**
-         * Được gọi khi CSDL được TẠO LẦN ĐẦU TIÊN
-         * (Sau khi gỡ cài đặt, hoặc lần đầu cài)
-         */
-        @Override
-        public void onCreate(@NonNull SupportSQLiteDatabase db) {
-            super.onCreate(db);
-
-            // Chạy việc tạo dữ liệu mặc định trên luồng nền
-            databaseWriteExecutor.execute(() -> {
-
-                // --- BẮT ĐẦU SỬA ĐỔI ---
-
-                // 1. LẤY CẢ HAI DAO
-                UserDao userDao = INSTANCE.userDao();
-                CategoryDao categoryDao = INSTANCE.categoryDao();
-
-                // 2. CHÈN USER TRƯỚC
-                String userId = "USER_ID_TAM_THOI"; // ID phải khớp nhau
-
-                User defaultUser = new User(
-                        userId,
-                        "test@example.com",
-                        "Người dùng Test",
-                        System.currentTimeMillis()
-                );
-                userDao.insert(defaultUser); // CHÈN USER VÀO BẢNG USERS
-
-                // --- KẾT THÚC SỬA ĐỔI ---
-
-                // 3. Bây giờ mới chèn CATEGORIES
-                List<Category> defaultCategories = new ArrayList<>();
-                // (userId đã được định nghĩa ở trên)
-
-                // THAY THẾ BẰNG 9 MỤC NÀY
-                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Ăn uống", "ic_food", "#FF5733", 1, System.currentTimeMillis()));
-                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Phương tiện", "ic_car", "#33FF57", 1, System.currentTimeMillis()));
-                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Giải trí", "ic_clapperboard", "#3357FF", 1, System.currentTimeMillis()));
-                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Nhà ở", "ic_home", "#FF33A1", 1, System.currentTimeMillis()));
-                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Y tế", "ic_medicine", "#A133FF", 1, System.currentTimeMillis()));
-                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Học tập", "ic_study", "#33FFF6", 1, System.currentTimeMillis()));
-                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Mỹ phẩm", "ic_cosmetics", "#F6FF33", 1, System.currentTimeMillis()));
-                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Quần áo", "ic_clothes", "#FF8C33", 1, System.currentTimeMillis()));
-                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Khác", "ic_other", "#808080", 1, System.currentTimeMillis()));
-
-                categoryDao.insertAll(defaultCategories);
-            });
-        }
-    };
+//    private static RoomDatabase.Callback sRoomDatabaseCallback = new RoomDatabase.Callback() {
+//
+//        /**
+//         * Được gọi khi CSDL được TẠO LẦN ĐẦU TIÊN
+//         * (Sau khi gỡ cài đặt, hoặc lần đầu cài)
+//         */
+//        @Override
+//        public void onCreate(@NonNull SupportSQLiteDatabase db) {
+//            super.onCreate(db);
+//
+//            // Chạy việc tạo dữ liệu mặc định trên luồng nền
+//            databaseWriteExecutor.execute(() -> {
+//
+//                // --- BẮT ĐẦU SỬA ĐỔI ---
+//
+//                // 1. LẤY CẢ HAI DAO
+//                UserDao userDao = INSTANCE.userDao();
+//                CategoryDao categoryDao = INSTANCE.categoryDao();
+//
+//                // 2. CHÈN USER TRƯỚC
+//                String userId = "USER_ID_TAM_THOI"; // ID phải khớp nhau
+//
+//                User defaultUser = new User(
+//                        userId,
+//                        "test@example.com",
+//                        "Người dùng Test",
+//                        System.currentTimeMillis()
+//                );
+//                userDao.insert(defaultUser); // CHÈN USER VÀO BẢNG USERS
+//
+//                // --- KẾT THÚC SỬA ĐỔI ---
+//
+//                // 3. Bây giờ mới chèn CATEGORIES
+//                List<Category> defaultCategories = new ArrayList<>();
+//                // (userId đã được định nghĩa ở trên)
+//
+//                // THAY THẾ BẰNG 9 MỤC NÀY
+//                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Ăn uống", "ic_food", "#FF5733", 1, System.currentTimeMillis()));
+//                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Phương tiện", "ic_car", "#33FF57", 1, System.currentTimeMillis()));
+//                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Giải trí", "ic_clapperboard", "#3357FF", 1, System.currentTimeMillis()));
+//                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Nhà ở", "ic_home", "#FF33A1", 1, System.currentTimeMillis()));
+//                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Y tế", "ic_medicine", "#A133FF", 1, System.currentTimeMillis()));
+//                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Học tập", "ic_study", "#33FFF6", 1, System.currentTimeMillis()));
+//                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Mỹ phẩm", "ic_cosmetics", "#F6FF33", 1, System.currentTimeMillis()));
+//                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Quần áo", "ic_clothes", "#FF8C33", 1, System.currentTimeMillis()));
+//                defaultCategories.add(new Category(UUID.randomUUID().toString(), userId, "Khác", "ic_other", "#808080", 1, System.currentTimeMillis()));
+//
+//                categoryDao.insertAll(defaultCategories);
+//            });
+//        }
+//    };
     // 4. Phương thức Singleton để lấy CSDL
     public static AppDatabase getDatabase(final Context context) {
         if (INSTANCE == null) {
@@ -122,7 +122,7 @@ public abstract class AppDatabase extends RoomDatabase {
                             // (ví dụ: thêm cột), hàm này sẽ xóa CSDL cũ và tạo mới.
                             // Trong sản phẩm thật, bạn sẽ phải dùng .addMigrations()
                             .fallbackToDestructiveMigration()
-                            .addCallback(sRoomDatabaseCallback)
+
                             .build();
                 }
             }

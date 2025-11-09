@@ -1,157 +1,177 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<!-- BƯỚC 1: Đổi root thành LinearLayout (vertical) -->
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".ui.expenses.AddEditExpenseActivity">
 
-    <LinearLayout
+    <!-- BƯỚC 2: Thêm Toolbar vào đây -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar_add_edit_expense"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:titleTextColor="@android:color/white"
+        android:elevation="4dp"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+    <!-- BƯỚC 3: Bọc nội dung cũ trong NestedScrollView -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Đây là nội dung gốc của bạn (chỉ đổi ScrollView -> LinearLayout) -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Số tiền">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edit_text_amount"
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="numberDecimal" />
+                android:hint="Số tiền">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edit_text_amount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberDecimal" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Chọn Danh mục"
-            android:textAppearance="?attr/textAppearanceLabelMedium" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-        <GridLayout
-            android:id="@+id/grid_layout_categories"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:columnCount="3"
-            android:alignmentMode="alignBounds" android:useDefaultMargins="true">
-
-            <include layout="@layout/layout_category_icon_button"
-                android:id="@+id/cat_btn_1"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_gravity="fill_horizontal" />
-            <include layout="@layout/layout_category_icon_button"
-                android:id="@+id/cat_btn_2"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_gravity="fill_horizontal" />
-            <include layout="@layout/layout_category_icon_button"
-                android:id="@+id/cat_btn_3"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_gravity="fill_horizontal" />
-
-            <include layout="@layout/layout_category_icon_button"
-                android:id="@+id/cat_btn_4"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_gravity="fill_horizontal" />
-            <include layout="@layout/layout_category_icon_button"
-                android:id="@+id/cat_btn_5"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_gravity="fill_horizontal" />
-            <include layout="@layout/layout_category_icon_button"
-                android:id="@+id/cat_btn_6"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_gravity="fill_horizontal" />
-
-            <include layout="@layout/layout_category_icon_button"
-                android:id="@+id/cat_btn_7"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_gravity="fill_horizontal" />
-            <include layout="@layout/layout_category_icon_button"
-                android:id="@+id/cat_btn_8"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1"
-                android:layout_gravity="fill_horizontal" />
-
-
-            <LinearLayout
-                android:id="@+id/cat_btn_other"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnWeight="1" android:layout_gravity="fill_horizontal" android:orientation="vertical"
-                android:gravity="center"
-                android:padding="8dp"
-                android:background="?attr/selectableItemBackground">
-
-                <ImageView
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    app:srcCompat="@android:drawable/ic_menu_more" /> <TextView
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:textSize="12sp"
-                android:text="Khác" />
-            </LinearLayout>
+                android:layout_marginTop="16dp"
+                android:text="Chọn Danh mục"
+                android:textAppearance="?attr/textAppearanceLabelMedium" />
 
-        </GridLayout>
-
-
-        <Button
-            android:id="@+id/button_select_date"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="Chọn ngày"
-            app:icon="@android:drawable/ic_menu_my_calendar"
-            android:gravity="start|center_vertical"
-            android:padding="12dp"
-            android:textAllCaps="false"
-            android:textColor="?attr/colorOnSurface" />
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Ghi chú (Không bắt buộc)">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edit_text_note"
+            <GridLayout
+                android:id="@+id/grid_layout_categories"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="textCapSentences" />
+                android:layout_marginTop="8dp"
+                android:columnCount="3"
+                android:alignmentMode="alignBounds" android:useDefaultMargins="true">
 
-        </com.google.android.material.textfield.TextInputLayout>
+                <include layout="@layout/layout_category_icon_button"
+                    android:id="@+id/cat_btn_1"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal" />
+                <include layout="@layout/layout_category_icon_button"
+                    android:id="@+id/cat_btn_2"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal" />
+                <include layout="@layout/layout_category_icon_button"
+                    android:id="@+id/cat_btn_3"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal" />
 
-        <Button
-            android:id="@+id/button_save"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:text="Lưu lại"
-            android:padding="12dp" />
+                <include layout="@layout/layout_category_icon_button"
+                    android:id="@+id/cat_btn_4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal" />
+                <include layout="@layout/layout_category_icon_button"
+                    android:id="@+id/cat_btn_5"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal" />
+                <include layout="@layout/layout_category_icon_button"
+                    android:id="@+id/cat_btn_6"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal" />
 
-    </LinearLayout>
-</ScrollView>
+                <include layout="@layout/layout_category_icon_button"
+                    android:id="@+id/cat_btn_7"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal" />
+                <include layout="@layout/layout_category_icon_button"
+                    android:id="@+id/cat_btn_8"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill_horizontal" />
+
+
+                <LinearLayout
+                    android:id="@+id/cat_btn_other"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1" android:layout_gravity="fill_horizontal" android:orientation="vertical"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:background="?attr/selectableItemBackground">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        app:srcCompat="@android:drawable/ic_menu_more" /> <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textSize="12sp"
+                    android:text="Khác" />
+                </LinearLayout>
+
+            </GridLayout>
+
+
+            <Button
+                android:id="@+id/button_select_date"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Chọn ngày"
+                app:icon="@android:drawable/ic_menu_my_calendar"
+                android:gravity="start|center_vertical"
+                android:padding="12dp"
+                android:textAllCaps="false"
+                android:textColor="?attr/colorOnSurface" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="Ghi chú (Không bắt buộc)">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/edit_text_note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textCapSentences" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <Button
+                android:id="@+id/button_save"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="Lưu lại"
+                android:padding="12dp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

@@ -7,6 +7,8 @@ import androidx.room.Index;
 import androidx.room.PrimaryKey;
 import androidx.annotation.NonNull;
 
+import com.google.firebase.firestore.PropertyName;
+
 @Entity(
         tableName = "EXPENSES",
         foreignKeys = {
@@ -30,35 +32,100 @@ public class Expense {
     @PrimaryKey
     @NonNull
     @ColumnInfo(name = "expense_id")
-    public String expenseId; // UUID
+    @PropertyName("expenseId") // Giả sử trên Firestore là "expenseId"
+    private String expenseId;
 
     @NonNull
     @ColumnInfo(name = "user_id")
-    public String userId;
+    @PropertyName("userId") // Giả sử trên Firestore là "userId"
+    private String userId;
 
     @ColumnInfo(name = "category_id")
-    public String categoryId; // Cho phép null
+    @PropertyName("categoryId") // Giả sử trên Firestore là "categoryId"
+    private String categoryId;
 
     @ColumnInfo(name = "amount")
-    public double amount;
+    @PropertyName("amount")
+    private double amount;
 
     @ColumnInfo(name = "note")
-    public String note;
+    @PropertyName("note")
+    private String note;
 
     @ColumnInfo(name = "date")
-    public long date; // Ngày giao dịch (Timestamp)
+    @PropertyName("date")
+    private long date;
 
     @ColumnInfo(name = "payment_method")
-    public String paymentMethod;
+    @PropertyName("paymentMethod")
+    private String paymentMethod;
 
     @ColumnInfo(name = "created_at")
-    public long createdAt;
+    @PropertyName("createdAt")
+    private long createdAt;
 
     @ColumnInfo(name = "updated_at")
-    public Long updatedAt; // Cho phép null
+    @PropertyName("updatedAt")
+    private Long updatedAt;
 
     @ColumnInfo(name = "synced")
-    public int synced;
+    // Chúng ta không cần @PropertyName cho 'synced'
+    // vì chúng ta không muốn đọc/ghi nó từ Firestore
+    private int synced;
 
     public Expense() {}
+
+    // --- SỬA LẠI GETTERS ĐỂ DÙNG @PropertyName ---
+    // (Lưu ý: Firestore dùng getters/setters, không dùng biến trực tiếp)
+    @NonNull
+    @PropertyName("expenseId")
+    public String getExpenseId() { return expenseId; }
+    @PropertyName("expenseId")
+    public void setExpenseId(@NonNull String expenseId) { this.expenseId = expenseId; }
+
+    @NonNull
+    @PropertyName("userId")
+    public String getUserId() { return userId; }
+    @PropertyName("userId")
+    public void setUserId(@NonNull String userId) { this.userId = userId; }
+
+    @PropertyName("categoryId")
+    public String getCategoryId() { return categoryId; }
+    @PropertyName("categoryId")
+    public void setCategoryId(String categoryId) { this.categoryId = categoryId; }
+
+    @PropertyName("amount")
+    public double getAmount() { return amount; }
+    @PropertyName("amount")
+    public void setAmount(double amount) { this.amount = amount; }
+
+    @PropertyName("note")
+    public String getNote() { return note; }
+    @PropertyName("note")
+    public void setNote(String note) { this.note = note; }
+
+    @PropertyName("date")
+    public long getDate() { return date; }
+    @PropertyName("date")
+    public void setDate(long date) { this.date = date; }
+
+    @PropertyName("paymentMethod")
+    public String getPaymentMethod() { return paymentMethod; }
+    @PropertyName("paymentMethod")
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    @PropertyName("createdAt")
+    public long getCreatedAt() { return createdAt; }
+    @PropertyName("createdAt")
+    public void setCreatedAt(long createdAt) { this.createdAt = createdAt; }
+
+    @PropertyName("updatedAt")
+    public Long getUpdatedAt() { return updatedAt; }
+    @PropertyName("updatedAt")
+    public void setUpdatedAt(Long updatedAt) { this.updatedAt = updatedAt; }
+
+    // 'synced' không cần @PropertyName
+    public int getSynced() { return synced; }
+    public void setSynced(int synced) { this.synced = synced; }
+    // --- KẾT THÚC SỬA LỖI B ---
 }

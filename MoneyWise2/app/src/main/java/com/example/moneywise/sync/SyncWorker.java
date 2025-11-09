@@ -12,6 +12,10 @@ import androidx.work.WorkerParameters;
 
 import com.example.moneywise.data.entity.SyncQueue;
 import com.example.moneywise.repository.MoneyWiseRepository;
+import com.example.moneywise.utils.SessionManager;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.List;
 
@@ -19,11 +23,15 @@ public class SyncWorker extends Worker {
 
     private static final String TAG = "SyncWorker";
     private MoneyWiseRepository mRepository;
+    private SessionManager mSessionManager; // Cần để lấy User ID
+    private FirebaseFirestore mFirestore; // Cần để truy cập Firebase
 
     public SyncWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
         super(context, workerParams);
         // Khởi tạo Repository để truy cập CSDL
         mRepository = new MoneyWiseRepository((Application) getApplicationContext());
+        mSessionManager = new SessionManager(getApplicationContext());
+        mFirestore = FirebaseFirestore.getInstance();
     }
 
     /**
@@ -34,38 +42,40 @@ public class SyncWorker extends Worker {
     public Result doWork() {
         Log.d(TAG, "SyncWorker bắt đầu chạy...");
 
-        try {
-            // 1. Lấy tất cả các mục đang chờ (theo thứ tự FIFO)
-            List<SyncQueue> pendingItems = mRepository.getPendingSyncItems();
+        // Lấy User ID thật
+        String userId = mSessionManager.getUserId();
+        if (userId == null) {
+            Log.w(TAG, "SyncWorker: Không có user ID, không thể đồng bộ.");
+            return Result.failure(); // Thất bại nếu không có user
+        }
 
+        try {
+            List<SyncQueue> pendingItems = mRepository.getPendingSyncItems();
             if (pendingItems.isEmpty()) {
                 Log.d(TAG, "Không có gì để đồng bộ.");
                 return Result.success();
             }
 
-            Log.d(TAG, "Tìm thấy " + pendingItems.size() + " mục cần đồng bộ.");
+            Log.d(TAG, "Tìm thấy " + pendingItems.size() + " mục cần đồng bộ cho user: " + userId);
 
-            // 2. Lặp qua từng mục và đẩy lên Firebase
             for (SyncQueue item : pendingItems) {
-                boolean isSuccess = pushToFirebase(item);
+                // Gọi hàm đồng bộ thật
+                boolean isSuccess = pushToFirebase(item, userId);
 
                 if (isSuccess) {
                     // 3. Nếu thành công: Xóa mục khỏi hàng đợi
                     mRepository.deleteSyncItem(item);
-                    Log.d(TAG, "Đồng bộ thành công: " + item.recordId);
+                    Log.d(TAG, "Đồng bộ thành công: " + item.getRecordId());
                 } else {
                     // 4. Nếu thất bại: Tăng số lần thử lại
-                    item.retryCount = item.retryCount + 1;
+                    item.setRetryCount(item.getRetryCount() + 1);
                     mRepository.updateSyncItem(item);
-                    Log.w(TAG, "Đồng bộ thất bại, thử lại sau: " + item.recordId);
-
-                    // (Bạn có thể thêm logic để không thử lại mãi mãi,
-                    // ví dụ: nếu retryCount > 5 thì báo lỗi)
+                    Log.w(TAG, "Đồng bộ thất bại, thử lại sau: " + item.getRecordId());
                 }
             }
 
             Log.d(TAG, "SyncWorker hoàn thành.");
-            return Result.success(); // Hoàn thành (cho dù có lỗi hay không)
+            return Result.success();
 
         } catch (Exception e) {
             Log.e(TAG, "SyncWorker gặp lỗi nghiêm trọng: ", e);
@@ -74,65 +84,55 @@ public class SyncWorker extends Worker {
     }
 
     /**
-     * Hàm GIẢ LẬP đẩy dữ liệu lên Firebase
-     * (Bạn sẽ thay thế hàm này bằng logic Firebase thật)
+     * Hàm ĐÃ HOÀN THIỆN: Đẩy dữ liệu lên Firebase (chạy đồng bộ)
      */
-    /**
-     * Hàm ĐÃ HOÀN THIỆN (về mặt logic) để đẩy dữ liệu
-     */
-    private boolean pushToFirebase(SyncQueue item) {
-        // 1. Lấy dữ liệu đầy đủ từ CSDL
-        Object data = null;
+    private boolean pushToFirebase(SyncQueue item, String userId) {
 
-        switch (item.tableName) {
-            case "EXPENSES":
-                data = mRepository.getExpenseById_Sync(item.recordId);
-                break;
-            case "CATEGORIES":
-                data = mRepository.getCategoryById_Sync(item.recordId);
-                break;
-            case "BUDGETS":
-                data = mRepository.getBudgetById_Sync(item.recordId);
-                break;
-        }
+        // 1. Xây dựng đường dẫn (Path)
+        // Ví dụ: users/{userId}/expenses/{expenseId}
+        DocumentReference docRef = mFirestore
+                .collection("users")
+                .document(userId)
+                .collection(item.getTableName().toLowerCase())
+                .document(item.getRecordId());
 
-        // 2. Xử lý hành động
         try {
-            // TODO: Khởi tạo Firebase Firestore của bạn ở đây
-            // FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-            String collectionPath = item.tableName.toLowerCase(); // "expenses", "categories"
-            String documentId = item.recordId;
-
-            switch (item.action) {
+            switch (item.getAction()) {
                 case CREATE:
                 case UPDATE:
-                    // Nếu dữ liệu vẫn tồn tại ở cục bộ (chưa bị xóa)
+                    // 2. Lấy dữ liệu đầy đủ từ CSDL Room
+                    Object data = null;
+                    switch (item.getTableName()) {
+                        case "EXPENSES":
+                            data = mRepository.getExpenseById_Sync(item.getRecordId());
+                            break;
+                        case "CATEGORIES":
+                            data = mRepository.getCategoryById_Sync(item.getRecordId());
+                            break;
+                        case "BUDGETS":
+                            data = mRepository.getBudgetById_Sync(item.getRecordId());
+                            break;
+                    }
+
                     if (data != null) {
-                        // TODO: Gọi hàm .set() hoặc .update() của Firebase
-                        // db.collection(collectionPath).document(documentId).set(data).await();
-                        Log.d(TAG, "Đẩy (CREATE/UPDATE) lên Firebase: " + documentId);
-                    } else {
-                        // Bản ghi đã bị xóa cục bộ trước khi kịp đồng bộ
-                        Log.w(TAG, "Bản ghi không tồn tại để CREATE/UPDATE: " + documentId);
+                        // 3. Đẩy dữ liệu lên và CHỜ (await)
+                        Log.d(TAG, "Đang đẩy (Set): " + docRef.getPath());
+                        Tasks.await(docRef.set(data)); // Ghi đè (Set)
                     }
                     break;
 
                 case DELETE:
-                    // TODO: Gọi hàm .delete() của Firebase
-                    // db.collection(collectionPath).document(documentId).delete().await();
-                    Log.d(TAG, "Đẩy (DELETE) lên Firebase: " + documentId);
+                    // 3. Gửi lệnh xóa và CHỜ (await)
+                    Log.d(TAG, "Đang đẩy (Delete): " + docRef.getPath());
+                    Tasks.await(docRef.delete());
                     break;
             }
-
-            // Giả lập độ trễ mạng (bạn có thể xóa dòng này)
-            Thread.sleep(500);
 
             return true; // Thành công
 
         } catch (Exception e) {
             // Ví dụ: Mất kết nối, Firebase lỗi quyền...
-            Log.e(TAG, "Lỗi khi đẩy lên Firebase: " + item.recordId, e);
+            Log.e(TAG, "Lỗi khi đẩy lên Firebase: " + item.getRecordId(), e);
             return false; // Thất bại
         }
     }
