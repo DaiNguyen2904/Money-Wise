@@ -96,9 +96,20 @@ public class MoneyWiseRepository {
                         Category category = dc.getDocument().toObject(Category.class);
                         category.setSynced(1);
                         switch (dc.getType()) {
-                            case ADDED: insertCategory_Sync(category); break;
-                            case MODIFIED: updateCategory_Sync(category); break;
-                            case REMOVED: deleteCategory_Sync(category); break;
+                            case ADDED:
+                                // --- SỬA LOGIC "UPSERT" ---
+                                // 1. Thử chèn (dùng IGNORE)
+                                insertCategory_Sync(category);
+                                // 2. Luôn cập nhật (để đảm bảo bản ghi mới nhất)
+                                updateCategory_Sync(category);
+                                // --- KẾT THÚC SỬA ---
+                                break;
+                            case MODIFIED:
+                                updateCategory_Sync(category);
+                                break;
+                            case REMOVED:
+                                deleteCategory_Sync(category);
+                                break;
                         }
                     }
                 });

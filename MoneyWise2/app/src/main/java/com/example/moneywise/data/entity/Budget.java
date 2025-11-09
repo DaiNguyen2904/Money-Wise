@@ -63,7 +63,11 @@ public class Budget {
     public Budget() {}
 
     public Budget(@NonNull String budgetId, @NonNull String userId, String categoryId, double amount, long createdAt) {
-// ... (code constructor giữ nguyên) ...
+        this.budgetId = budgetId;
+        this.userId = userId;
+        this.categoryId = categoryId;
+        this.amount = amount;
+        this.createdAt = createdAt;
     }
 
     // --- THÊM @PropertyName VÀO GETTERS/SETTERS ---
