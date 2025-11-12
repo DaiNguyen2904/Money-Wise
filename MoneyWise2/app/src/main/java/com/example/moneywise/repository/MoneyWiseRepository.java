@@ -11,6 +11,7 @@ import androidx.lifecycle.LiveData;
 import com.example.moneywise.data.AppDatabase;
 import com.example.moneywise.data.dao.*;
 import com.example.moneywise.data.entity.*;
+import com.example.moneywise.data.model.CategoryExpenseSummary;
 import com.example.moneywise.ui.user.UserViewModel;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
@@ -626,5 +627,9 @@ public class MoneyWiseRepository {
                 callback.onComplete(false, "Tải ảnh lên thất bại: " + task.getException().getMessage());
             }
         });
+    }
+
+    public LiveData<List<CategoryExpenseSummary>> getExpenseSummaryByCategory(String currentUserId, long startDate, long endDate) {
+        return mExpenseDao.getExpenseSummaryByCategory(currentUserId, startDate, endDate);
     }
 }

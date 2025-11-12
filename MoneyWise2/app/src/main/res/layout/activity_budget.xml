@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.budgets.BudgetActivity">
+    tools:context=".ui.budgets.BudgetActivity"
+    android:background="@color/app_background_gray">
 
     <ListView
         android:id="@+id/list_view_budgets"

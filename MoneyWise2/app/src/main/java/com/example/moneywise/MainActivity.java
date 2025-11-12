@@ -18,6 +18,7 @@ import com.example.moneywise.ui.budgets.BudgetFragment;
 import com.example.moneywise.ui.categories.CategoryFragment;
 import com.example.moneywise.ui.expenses.ExpenseFragment;
 import com.example.moneywise.ui.home.HomeFragment;
+import com.example.moneywise.ui.report.ReportFragment;
 import com.example.moneywise.ui.user.UserFragment;
 import com.example.moneywise.utils.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -118,10 +119,10 @@ public class MainActivity extends AppCompatActivity{
                 loadFragment(new BudgetFragment());
                 return true;
             }
-//            else if (itemId == R.id.nav_categories) {
-//                loadFragment(new CategoryFragment());
-//                return true;
-//            }
+            else if (itemId == R.id.nav_report) {
+                loadFragment(new ReportFragment());
+                return true;
+            }
             else if (itemId == R.id.nav_user) { // MỚI
                 loadFragment(new UserFragment());
                 return true;

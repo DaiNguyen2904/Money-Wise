@@ -84,7 +84,7 @@ public class AddEditBudgetActivity extends AppCompatActivity {
         mEditTextAmount = findViewById(R.id.edit_text_amount_budget);
         mGridCategories = findViewById(R.id.grid_layout_categories_budget); // <-- CẬP NHẬT
         mBtnOtherCategory = findViewById(R.id.cat_btn_other_budget); // <-- CẬP NHẬT
-        mToolbar = findViewById(R.id.toolbar_add_edit_expense);
+        mToolbar = findViewById(R.id.toolbar_add_edit_budget);
         setSupportActionBar(mToolbar);
 
         mButtonSave = findViewById(R.id.button_save);
