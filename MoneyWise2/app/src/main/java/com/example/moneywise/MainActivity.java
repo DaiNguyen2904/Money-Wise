@@ -117,10 +117,12 @@ public class MainActivity extends AppCompatActivity{
             } else if (itemId == R.id.nav_budgets) {
                 loadFragment(new BudgetFragment());
                 return true;
-            } else if (itemId == R.id.nav_categories) {
-                loadFragment(new CategoryFragment());
-                return true;
-            } else if (itemId == R.id.nav_user) { // MỚI
+            }
+//            else if (itemId == R.id.nav_categories) {
+//                loadFragment(new CategoryFragment());
+//                return true;
+//            }
+            else if (itemId == R.id.nav_user) { // MỚI
                 loadFragment(new UserFragment());
                 return true;
             }

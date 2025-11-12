@@ -2,13 +2,16 @@ package com.example.moneywise.ui.expenses;
 
 import android.app.Activity;
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -18,6 +21,7 @@ import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.lifecycle.ViewModelProvider;
@@ -25,7 +29,9 @@ import androidx.lifecycle.ViewModelProvider;
 import com.example.moneywise.R;
 import com.example.moneywise.data.entity.Category;
 import com.example.moneywise.data.entity.Expense;
+import com.example.moneywise.repository.MoneyWiseRepository;
 import com.example.moneywise.ui.categories.CategoryActivity;
+import com.example.moneywise.utils.SessionManager;
 import com.google.android.material.textfield.TextInputEditText;
 
 
@@ -37,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 public class AddEditExpenseActivity extends AppCompatActivity {
 
@@ -59,7 +66,6 @@ public class AddEditExpenseActivity extends AppCompatActivity {
     private String mSelectedCategoryId = null; // ID của danh mục đang được chọn
     private View mSelectedButtonView = null; // View của nút đang được chọn
     private Drawable mDefaultButtonBackground; // Lưu background mặc định
-    private ActivityResultLauncher<Intent> mPickCategoryLauncher;
     // Khai báo Views
     private TextInputEditText mEditTextAmount;
     private GridLayout mGridCategories; // <-- THÊM DÒNG NÀY
@@ -79,6 +85,14 @@ public class AddEditExpenseActivity extends AppCompatActivity {
 
     private Toolbar mToolbar;
 
+    private MoneyWiseRepository mRepository;
+
+    private String currentUserId;
+
+    private TextView mTextViewSelectedCategoryName;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,12 +108,17 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         mEditTextNote = findViewById(R.id.edit_text_note);
         mButtonSave = findViewById(R.id.button_save);
         mToolbar = findViewById(R.id.toolbar_add_edit_expense);
+        mTextViewSelectedCategoryName = findViewById(R.id.text_view_selected_category_name);
         setSupportActionBar(mToolbar);
 
         // Khởi tạo
         mCalendar = Calendar.getInstance();
         mSelectedDateTimestamp = mCalendar.getTimeInMillis(); // Mặc định là hôm nay
         updateDateButtonText();
+
+        mRepository = new MoneyWiseRepository(getApplication());
+        currentUserId = new SessionManager(getApplication()).getUserId();
+
 
 
         // Lấy ViewModel
@@ -108,10 +127,11 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         mViewModel = new ViewModelProvider(this, factory).get(AddEditExpenseViewModel.class);
 
         // Cài đặt các thành phần
-        registerPickCategoryLauncher();
+//        registerPickCategoryLauncher();
         setupCategoryGrid();
         setupDatePicker();
         setupSaveButton();
+        mTextViewSelectedCategoryName.setVisibility(View.GONE);
 
         // 1. KIỂM TRA INTENT ĐỂ XEM LÀ "THÊM" HAY "SỬA"
         Intent intent = getIntent();
@@ -170,6 +190,10 @@ public class AddEditExpenseActivity extends AppCompatActivity {
     /**
      * Hàm mới: Chỉ chọn Spinner KHI CẢ 2 nguồn dữ liệu đã sẵn sàng
      */
+    /**
+     * HÀM ĐƯỢC CẬP NHẬT:
+     * Cố gắng chọn nút, nếu không tìm thấy trong 8 nút đầu -> chọn nút "Khác"
+     */
     private void trySetSpinnerSelection(String categoryIdToSelect) {
         if (!isCategoryListLoaded || !isExpenseDataLoaded) {
             return; // Chưa sẵn sàng, chờ
@@ -182,9 +206,10 @@ public class AddEditExpenseActivity extends AppCompatActivity {
             else return; // Không có gì để chọn
         }
 
-        // 1. Kiểm tra xem ID có nằm trong 9 nút mặc định không
+        // 1. Kiểm tra xem ID có nằm trong 8 nút mặc định không
         String selectedPresetName = null;
         for (Map.Entry<String, String> entry : mPresetIdMap.entrySet()) {
+            // (Lưu ý: mPresetIdMap giờ chỉ chứa 8 nút)
             if (entry.getValue().equals(categoryIdToSelect)) {
                 selectedPresetName = entry.getKey();
                 break;
@@ -192,14 +217,29 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         }
 
         if (selectedPresetName != null) {
-            // 2. Nằm trong 9 nút -> Highlight nút đó
+            // 2. Nằm trong 8 nút -> Highlight nút đó
             View buttonToSelect = mPresetButtonMap.get(selectedPresetName);
             if (buttonToSelect != null) {
                 selectCategoryButton(categoryIdToSelect, buttonToSelect);
             }
         } else {
-            // 3. KHÔNG nằm trong 9 nút -> Highlight nút "Khác"
+            // 3. KHÔNG nằm trong 8 nút -> Đây là danh mục "Khác"
+            // Highlight nút "Khác"
             selectCategoryButton(categoryIdToSelect, mBtnOtherCategory);
+
+            // Lấy tên danh mục đó và hiển thị
+            String finalCategoryIdToSelect = categoryIdToSelect;
+            mViewModel.getAllCategories().observe(this, categories -> {
+                for (Category cat : categories) {
+                    if (cat.getCategoryId().equals(finalCategoryIdToSelect)) {
+                        TextView otherText = mBtnOtherCategory.findViewById(R.id.text_category_name);
+                        if (otherText != null) {
+                            otherText.setText(cat.getName());
+                        }
+                        break;
+                    }
+                }
+            });
         }
     }
 
@@ -276,20 +316,20 @@ public class AddEditExpenseActivity extends AppCompatActivity {
     /**
      * HÀM MỚI: Đăng ký Launcher cho nút "Khác"
      */
-    private void registerPickCategoryLauncher() {
-        mPickCategoryLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                        String categoryId = result.getData().getStringExtra(CategoryActivity.EXTRA_SELECTED_CATEGORY_ID);
-                        if (categoryId != null) {
-                            // Người dùng đã chọn một mục từ danh sách "Khác"
-                            // Chúng ta sẽ highlight nút "Khác"
-                            selectCategoryButton(categoryId, mBtnOtherCategory);
-                        }
-                    }
-                });
-    }
+//    private void registerPickCategoryLauncher() {
+//        mPickCategoryLauncher = registerForActivityResult(
+//                new ActivityResultContracts.StartActivityForResult(),
+//                result -> {
+//                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+//                        String categoryId = result.getData().getStringExtra(CategoryActivity.EXTRA_SELECTED_CATEGORY_ID);
+//                        if (categoryId != null) {
+//                            // Người dùng đã chọn một mục từ danh sách "Khác"
+//                            // Chúng ta sẽ highlight nút "Khác"
+//                            selectCategoryButton(categoryId, mBtnOtherCategory);
+//                        }
+//                    }
+//                });
+//    }
 
     /**
      * HÀM MỚI (THAY THẾ setupCategorySpinner)
@@ -304,16 +344,13 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         mPresetButtonMap.put(PRESET_CATEGORY_NAMES.get(5), findViewById(R.id.cat_btn_6));
         mPresetButtonMap.put(PRESET_CATEGORY_NAMES.get(6), findViewById(R.id.cat_btn_7));
         mPresetButtonMap.put(PRESET_CATEGORY_NAMES.get(7), findViewById(R.id.cat_btn_8));
-        mPresetButtonMap.put(PRESET_CATEGORY_NAMES.get(8), findViewById(R.id.cat_btn_other)); // Nút "Khác" của bạn (số 9)
+
 
         // Lưu background mặc định để reset
         mDefaultButtonBackground = mPresetButtonMap.get(PRESET_CATEGORY_NAMES.get(0)).getBackground();
 
-        // Gán sự kiện cho nút "Khác" thật (nút thứ 10)
         mBtnOtherCategory.setOnClickListener(v -> {
-            Intent intent = new Intent(AddEditExpenseActivity.this, CategoryActivity.class);
-            intent.putExtra(CategoryActivity.EXTRA_PICK_MODE, true); // Chạy ở chế độ "Chọn"
-            mPickCategoryLauncher.launch(intent);
+            showCreateCategoryDialog();
         });
 
         // Lấy danh sách TẤT CẢ danh mục từ ViewModel
@@ -359,24 +396,6 @@ public class AddEditExpenseActivity extends AppCompatActivity {
                     buttonView.setVisibility(View.GONE);
                 }
             }
-            // 3. XỬ LÝ NÚT THỨ 9 ("Khác" - R.id.cat_btn_other) RIÊNG BIỆT
-            String otherPresetName = PRESET_CATEGORY_NAMES.get(8); // Tên là "Khác"
-            View otherButtonView = mPresetButtonMap.get(otherPresetName); // View là R.id.cat_btn_other
-            Category otherCategory = categoryNameMap.get(otherPresetName); // Category "Khác"
-
-            if (otherCategory != null) {
-                otherButtonView.setVisibility(View.VISIBLE);
-                // Chỉ lưu ID của category "Khác" vào Map
-                // (Để hàm trySetSpinnerSelection() có thể tìm và highlight nút này)
-                mPresetIdMap.put(otherPresetName, otherCategory.getCategoryId());
-
-                // **QUAN TRỌNG:**
-                // Chúng ta KHÔNG cấu hình icon/text (vì layout khác, sẽ crash)
-                // Chúng ta KHÔNG gán OnClickListener (vì Dòng 311 đã gán listener MỞ DANH SÁCH)
-            } else {
-                // Không tìm thấy category "Khác" trong DB
-                otherButtonView.setVisibility(View.GONE);
-            }
 
             // (Phần này để xử lý chế độ Sửa, giống như cũ)
             isCategoryListLoaded = true; // Dùng lại cờ này
@@ -385,12 +404,42 @@ public class AddEditExpenseActivity extends AppCompatActivity {
     }
 
     /**
+     * HÀM MỚI: Tạo một danh mục mới và lưu vào CSDL.
+     * Trả về đối tượng Category vừa tạo để UI có thể sử dụng ngay lập tức.
+     */
+    public Category insertNewCategory(String categoryName) {
+        Category newCategory = new Category();
+        newCategory.setCategoryId(UUID.randomUUID().toString());
+        newCategory.setUserId(currentUserId);
+        newCategory.setName(categoryName);
+        newCategory.setIcon("ic_other"); // Icon mặc định
+        newCategory.setColor("#808080"); // Màu mặc định
+        newCategory.setIsDefault(0); // Không phải mặc định
+        newCategory.setCreatedAt(System.currentTimeMillis());
+        // (synced = 0 sẽ được Repo tự động xử lý)
+
+        mRepository.insertCategory(newCategory); // Chạy async
+
+        return newCategory; // Trả về đối tượng ngay cho UI
+    }
+
+    /**
+     * HÀM MỚI: Xử lý khi nhấn 1 nút danh mục
+     */
+    /**
      * HÀM MỚI: Xử lý khi nhấn 1 nút danh mục
      */
     private void selectCategoryButton(String categoryId, View buttonView) {
         // 1. Xóa highlight khỏi nút cũ (nếu có)
         if (mSelectedButtonView != null) {
             mSelectedButtonView.setBackground(mDefaultButtonBackground);
+            // Nếu nút cũ là nút "Khác", reset text của nó
+            if (mSelectedButtonView == mBtnOtherCategory) {
+                TextView otherText = mBtnOtherCategory.findViewById(R.id.text_category_name);
+                if (otherText != null) {
+                    otherText.setText("Khác"); // Reset về chữ "Khác"
+                }
+            }
         }
 
         // 2. Highlight nút mới
@@ -399,6 +448,81 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         // 3. Lưu trạng thái
         mSelectedButtonView = buttonView;
         mSelectedCategoryId = categoryId;
+
+        // 4. Cập nhật lên Text View
+        if (categoryId == null) {
+            mTextViewSelectedCategoryName.setVisibility(View.GONE);
+        } else {
+            // Chúng ta cần lấy tên danh mục từ ID
+            // Chúng ta lắng nghe LiveData để tìm tên
+            mViewModel.getAllCategories().observe(this, categories -> {
+                if (categories == null) return;
+                for (Category cat : categories) {
+                    if (cat.getCategoryId().equals(mSelectedCategoryId)) {
+                        mTextViewSelectedCategoryName.setText(cat.getName());
+                        mTextViewSelectedCategoryName.setVisibility(View.VISIBLE);
+
+                        // Cập nhật text của nút "Khác" (nếu nó được chọn)
+                        if (mSelectedButtonView == mBtnOtherCategory) {
+                            TextView otherText = mBtnOtherCategory.findViewById(R.id.text_category_name);
+                            if (otherText != null) {
+                                otherText.setText(cat.getName());
+                            }
+                        }
+                        break;
+                    }
+                }
+            });
+        }
+
+    }
+
+    /**
+     * HÀM MỚI: Hiển thị Dialog để tạo Category
+     */
+    private void showCreateCategoryDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Tạo Danh mục mới");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
+        input.setHint("Tên danh mục (ví dụ: Du lịch)");
+
+        // Thêm padding cho EditText
+        LinearLayout container = new LinearLayout(this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        int padding = (int) (16 * getResources().getDisplayMetrics().density); // 16dp
+        container.setPadding(padding, padding / 2, padding, padding / 2);
+        container.addView(input, lp);
+        builder.setView(container);
+
+        // Set up the buttons
+        builder.setPositiveButton("Lưu", (dialog, which) -> {
+            String categoryName = input.getText().toString().trim();
+            if (categoryName.isEmpty()) {
+                Toast.makeText(AddEditExpenseActivity.this, "Tên không được để trống", Toast.LENGTH_SHORT).show();
+            } else {
+                // 1. Tạo category mới thông qua ViewModel
+                Category newCategory = mViewModel.insertNewCategory(categoryName);
+
+                // 2. Cập nhật UI để chọn nút "Khác"
+                //    và lưu ID của category mới tạo
+                selectCategoryButton(newCategory.getCategoryId(), mBtnOtherCategory);
+
+                // 3. Cập nhật text của nút "Khác" để người dùng biết
+                //    (Vì `mBtnOtherCategory` là LinearLayout, ta tìm TextView bên trong)
+                TextView otherText = mBtnOtherCategory.findViewById(R.id.text_category_name);
+                if (otherText != null) {
+                    otherText.setText(newCategory.getName()); // Hiển thị tên mới
+                }
+            }
+        });
+        builder.setNegativeButton("Hủy", (dialog, which) -> dialog.cancel());
+
+        builder.show();
     }
 
     private int getIconResource(String iconName) {

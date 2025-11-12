@@ -12,9 +12,9 @@
         android:id="@+id/nav_budgets"
         android:icon="@android:drawable/ic_menu_compass" android:title="Ngân sách" />
 
-    <item
-        android:id="@+id/nav_categories"
-        android:icon="@android:drawable/ic_menu_sort_by_size" android:title="Danh mục" />
+<!--    <item-->
+<!--        android:id="@+id/nav_categories"-->
+<!--        android:icon="@android:drawable/ic_menu_sort_by_size" android:title="Danh mục" />-->
     <item
         android:id="@+id/nav_user"
         android:icon="@android:drawable/ic_menu_myplaces"

@@ -14,6 +14,7 @@ import com.example.moneywise.repository.MoneyWiseRepository;
 import com.example.moneywise.utils.SessionManager;
 
 import java.util.List;
+import java.util.UUID;
 
 public class AddEditExpenseViewModel extends AndroidViewModel {
 
@@ -61,9 +62,28 @@ public class AddEditExpenseViewModel extends AndroidViewModel {
         return mAllCategories;
     }
 
-    // Chúng ta sẽ không đặt hàm insert/update ở đây,
-    // mà sẽ gửi dữ liệu về cho ExpenseViewModel xử lý
-    // để giữ logic tập trung ở một nơi.
+    /**
+     * === HÀM MỚI ===
+     * Tạo một danh mục mới (ví dụ: "Du lịch") với icon và màu mặc định.
+     * Hàm này sẽ lưu vào CSDL (thông qua Repository) và
+     * trả về đối tượng Category vừa tạo để UI sử dụng ngay.
+     */
+    public Category insertNewCategory(String categoryName) {
+        Category newCategory = new Category();
+        newCategory.setCategoryId(UUID.randomUUID().toString());
+        newCategory.setUserId(currentUserId);
+        newCategory.setName(categoryName);
+        newCategory.setIcon("ic_other"); // Icon mặc định "ic_other"
+        newCategory.setColor("#808080"); // Màu xám mặc định
+        newCategory.setIsDefault(0); // 0 = không phải danh mục gốc
+        newCategory.setCreatedAt(System.currentTimeMillis());
+        // (Repository sẽ tự động set 'synced = 0')
 
+        // Yêu cầu Repository lưu trữ (hành động này chạy nền)
+        mRepository.insertCategory(newCategory);
+
+        // Trả về đối tượng Category ngay lập tức cho UI
+        return newCategory;
+    }
 
 }

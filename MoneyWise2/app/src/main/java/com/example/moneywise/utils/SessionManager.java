@@ -11,6 +11,7 @@ public class SessionManager {
     private static final String PREF_NAME = "MoneyWiseSession";
     private static final String KEY_USER_ID = "USER_ID";
     private static final String KEY_IS_FIRST_LOGIN = "IS_FIRST_LOGIN";
+    private static final String KEY_HAS_SEEN_ONBOARDING = "HAS_SEEN_ONBOARDING";
 
     private SharedPreferences mPrefs;
     private SharedPreferences.Editor mEditor;
@@ -61,12 +62,34 @@ public class SessionManager {
         return isFirst;
     }
 
+    // --- HÀM MỚI: Đánh dấu là đã xem Onboarding ---
     /**
-     * Xóa session (Đăng xuất)
+     * Đánh dấu rằng người dùng đã hoàn thành màn hình giới thiệu (Onboarding)
+     */
+    public void setHasSeenOnboarding() {
+        mEditor.putBoolean(KEY_HAS_SEEN_ONBOARDING, true);
+        mEditor.commit();
+    }
+
+    // --- HÀM MỚI: Kiểm tra xem đã xem Onboarding chưa ---
+    /**
+     * Kiểm tra xem người dùng đã xem màn hình giới thiệu chưa
+     * @return true nếu đã xem, false nếu chưa (mặc định)
+     */
+    public boolean hasSeenOnboarding() {
+        return mPrefs.getBoolean(KEY_HAS_SEEN_ONBOARDING, false);
+    }
+
+    /**
+     * Xóa session (Đăng xuất) (Không xoá Onboarding)
      */
     public void logout() {
-        mEditor.clear();
-        mEditor.putBoolean(KEY_IS_FIRST_LOGIN, true);
+        // mEditor.clear(); // <-- Không dùng hàm này nữa
+
+        // Chỉ xóa các key liên quan đến phiên đăng nhập
+        mEditor.remove(KEY_USER_ID);
+        mEditor.putBoolean(KEY_IS_FIRST_LOGIN, true); // Đặt lại cờ này
+
         mEditor.commit();
     }
 }
