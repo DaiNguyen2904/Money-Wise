@@ -14,9 +14,9 @@ public class OnboardingAdapter extends FragmentStateAdapter {
 
     // (Chúng ta sẽ dùng các icon có sẵn trong drawable của bạn)
     private static final int[] IMAGE_RES_IDS = new int[]{
-            R.drawable.ic_launcher_foreground, // (Bạn có thể đổi thành logo)
-            R.drawable.ic_food, //
-            R.drawable.ic_car // (Minh họa cho 1 danh mục ngân sách)
+            R.drawable.anh_gioi_thieu_mot, // (Bạn có thể đổi thành logo)
+            R.drawable.anh_gioi_thieu_hai, //
+            R.drawable.anh_gioi_thieu_ba // (Minh họa cho 1 danh mục ngân sách)
     };
 
 

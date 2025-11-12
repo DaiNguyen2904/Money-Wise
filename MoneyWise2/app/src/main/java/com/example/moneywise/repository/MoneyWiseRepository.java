@@ -3,6 +3,7 @@ package com.example.moneywise.repository;
 import static android.content.ContentValues.TAG;
 
 import android.app.Application;
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
@@ -10,13 +11,25 @@ import androidx.lifecycle.LiveData;
 import com.example.moneywise.data.AppDatabase;
 import com.example.moneywise.data.dao.*;
 import com.example.moneywise.data.entity.*;
+import com.example.moneywise.ui.user.UserViewModel;
+import com.google.android.gms.tasks.Task;
+import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.DocumentChange;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Repository (Kho chứa) đóng vai trò là Nguồn sự thật duy nhất (Single Source of Truth).
@@ -33,6 +46,7 @@ public class MoneyWiseRepository {
 
     private AppDatabase mDatabase;
     private FirebaseFirestore mFirestore = FirebaseFirestore.getInstance();
+    private FirebaseStorage mStorage = FirebaseStorage.getInstance();
     // Danh sách các trình lắng nghe
     private List<ListenerRegistration> mListeners = new ArrayList<>();
 
@@ -501,6 +515,116 @@ public class MoneyWiseRepository {
         mDatabase.runInTransaction(() -> {
             mCategoryDao.insert(category);
             mSyncQueueDao.insert(syncItem);
+        });
+    }
+    // --- === HÀM MỚI ĐỂ CẬP NHẬT USER PROFILE === ---
+
+    /**
+     * Cập nhật thông tin (Tên, SĐT) của người dùng trên
+     * 1. Firebase Auth (chỉ Tên)
+     * 2. Firebase Firestore (Tên và SĐT)
+     * 3. Room (Tên và SĐT)
+     */
+    public void updateUserProfileData(FirebaseUser fUser, String newName, String newPhone,
+                                      UserViewModel.OnProfileUpdateCallback callback) {
+
+        // 1. Cập nhật Firebase Auth (Display Name)
+        UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                .setDisplayName(newName)
+                .build();
+        Task<Void> authTask = fUser.updateProfile(profileUpdates);
+
+        // 2. Cập nhật Firestore
+        DocumentReference userDocRef = mFirestore.collection("users").document(fUser.getUid());
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("displayName", newName);
+        updates.put("phone", newPhone);
+        Task<Void> firestoreTask = userDocRef.set(updates, SetOptions.merge());
+
+        // Chạy cả hai song song
+        Tasks.whenAll(authTask, firestoreTask).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                // 3. Cập nhật Room (chạy nền)
+                AppDatabase.databaseWriteExecutor.execute(() -> {
+                    User localUser = mUserDao.getUserById_Sync(fUser.getUid());
+                    if (localUser != null) {
+                        localUser.setDisplayName(newName);
+                        localUser.setPhone(newPhone);
+                        localUser.setSynced(1); // Coi như đã sync
+                        mUserDao.update(localUser);
+                    } else {
+                        // (Trường hợp hiếm: chưa có user local)
+                        User newUser = new User(fUser.getUid(), fUser.getEmail(), newName, System.currentTimeMillis());
+                        newUser.setPhone(newPhone);
+                        mUserDao.insert(newUser);
+                    }
+                });
+                callback.onComplete(true, "Cập nhật thành công!");
+            } else {
+                callback.onComplete(false, "Cập nhật thất bại: " + task.getException().getMessage());
+            }
+        });
+    }
+
+    /**
+     * Cập nhật ảnh đại diện của người dùng
+     * 1. Tải ảnh lên Firebase Storage
+     * 2. Lấy URL ảnh
+     * 3. Cập nhật URL vào Firebase Auth
+     * 4. Cập nhật URL vào Firestore
+     * 5. Cập nhật URL vào Room
+     */
+    public void updateUserAvatar(FirebaseUser fUser, Uri imageUri,
+                                 UserViewModel.OnProfileUpdateCallback callback) {
+
+        // 1. Tải ảnh lên Storage
+        StorageReference avatarRef = mStorage.getReference()
+                .child("avatars")
+                .child(fUser.getUid() + ".jpg"); // Đặt tên file theo UID
+
+        UploadTask uploadTask = avatarRef.putFile(imageUri);
+
+        uploadTask.continueWithTask(task -> {
+            if (!task.isSuccessful()) {
+                throw task.getException();
+            }
+            // 2. Lấy URL ảnh
+            return avatarRef.getDownloadUrl();
+        }).addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Uri downloadUri = task.getResult();
+                String imageUrl = downloadUri.toString();
+
+                // 3. Cập nhật Firebase Auth (Avatar URL)
+                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                        .setPhotoUri(downloadUri)
+                        .build();
+                Task<Void> authTask = fUser.updateProfile(profileUpdates);
+
+                // 4. Cập nhật Firestore
+                DocumentReference userDocRef = mFirestore.collection("users").document(fUser.getUid());
+                Task<Void> firestoreTask = userDocRef.update("avatarUrl", imageUrl);
+
+                Tasks.whenAll(authTask, firestoreTask).addOnCompleteListener(updateTask -> {
+                    if (updateTask.isSuccessful()) {
+                        // 5. Cập nhật Room
+                        AppDatabase.databaseWriteExecutor.execute(() -> {
+                            User localUser = mUserDao.getUserById_Sync(fUser.getUid());
+                            if (localUser != null) {
+                                localUser.setAvatarUrl(imageUrl);
+                                mUserDao.update(localUser);
+                            }
+                        });
+                        callback.onComplete(true, "Cập nhật ảnh thành công!");
+                    } else {
+                        callback.onComplete(false, "Lỗi khi lưu URL ảnh: " + updateTask.getException().getMessage());
+                    }
+                });
+
+            } else {
+                // Lỗi khi tải ảnh lên (Bước 1 hoặc 2)
+                callback.onComplete(false, "Tải ảnh lên thất bại: " + task.getException().getMessage());
+            }
         });
     }
 }

@@ -55,8 +55,7 @@ public class OnboardingActivity extends AppCompatActivity {
 
         // Liên kết ViewPager2 (khung lướt) với TabLayout (dấu chấm)
         new TabLayoutMediator(mTabLayout, mViewPager, (tab, position) -> {
-            // Không cần làm gì ở đây,
-            // layout "onboarding_dot_selector.xml" sẽ tự xử lý
+            tab.setIcon(R.drawable.onboarding_tab_item);
         }).attach();
 
 

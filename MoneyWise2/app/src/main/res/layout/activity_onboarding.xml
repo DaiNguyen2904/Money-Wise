@@ -7,6 +7,10 @@
     android:layout_height="match_parent"
     tools:context=".ui.onboarding.OnboardingActivity">
 
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager_onboarding"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
     <Button
         android:id="@+id/button_start_login"
         android:layout_width="wrap_content"
@@ -20,21 +24,18 @@
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_layout_indicator"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_above="@id/button_start_login"
+        android:layout_centerHorizontal="true"
         android:layout_marginBottom="16dp"
 
-        app:tabBackground="@drawable/onboarding_tab_item"
+        android:background="@android:color/transparent"
+        app:tabIconTint="@null"
 
         app:tabGravity="center"
         app:tabIndicatorHeight="0dp"
-
+        app:tabRippleColor="@android:color/transparent"
         />
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/view_pager_onboarding"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@id/tab_layout_indicator" />
 
 </RelativeLayout>
