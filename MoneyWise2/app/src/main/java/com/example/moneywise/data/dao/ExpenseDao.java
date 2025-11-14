@@ -64,4 +64,10 @@ public interface ExpenseDao {
             "WHERE user_id = :userId AND date BETWEEN :startDate AND :endDate " +
             "GROUP BY category_id")
     LiveData<List<CategoryExpenseSummary>> getExpenseSummaryByCategory(String userId, long startDate, long endDate);
+
+    /**
+     * Lấy 5 giao dịch gần đây nhất (sắp xếp theo ngày mới nhất)
+     */
+    @Query("SELECT * FROM EXPENSES WHERE user_id = :userId ORDER BY date DESC LIMIT 5")
+    LiveData<List<Expense>> getRecentExpenses(String userId);
 }
