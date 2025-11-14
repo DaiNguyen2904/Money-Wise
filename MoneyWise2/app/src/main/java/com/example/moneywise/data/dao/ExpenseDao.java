@@ -9,6 +9,7 @@ import androidx.room.Query;
 import androidx.room.Update;
 
 import com.example.moneywise.data.entity.Expense;
+import com.example.moneywise.data.model.CategoryExpenseSummary;
 
 import java.util.List;
 
@@ -53,4 +54,14 @@ public interface ExpenseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<Expense> expenses);
+
+    // --- HÀM MỚI CHO BÁO CÁO (BIỂU ĐỒ TRÒN) ---
+    /**
+     * Lấy tổng chi tiêu, nhóm theo từng danh mục, trong một khoảng thời gian.
+     * Trả về một danh sách các POJO (CategoryExpenseSummary).
+     */
+    @Query("SELECT category_id, SUM(amount) as total_amount FROM EXPENSES " +
+            "WHERE user_id = :userId AND date BETWEEN :startDate AND :endDate " +
+            "GROUP BY category_id")
+    LiveData<List<CategoryExpenseSummary>> getExpenseSummaryByCategory(String userId, long startDate, long endDate);
 }

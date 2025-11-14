@@ -13,7 +13,7 @@ import com.example.moneywise.data.entity.User;
 public interface UserDao {
 
     // Dùng REPLACE: Nếu chèn user có cùng user_id, nó sẽ được cập nhật
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insert(User user);
 
     @Update

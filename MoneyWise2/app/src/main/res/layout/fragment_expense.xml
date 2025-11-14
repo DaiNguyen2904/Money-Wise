@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:background="@color/app_background_gray"
     tools:context=".ui.expenses.ExpenseFragment">
 
     <!-- 1. Hộp Tìm kiếm MỚI -->
@@ -27,7 +28,8 @@
         android:layout_weight="1"
         android:divider="@null"
         android:dividerHeight="0dp"
-        tools:listitem="@layout/list_item_expense" />
+        tools:listitem="@layout/list_item_expense"
+        android:background="@color/app_background_gray"/>
 
     <!-- 3. FAB cũ (chuyển vào trong RelativeLayout hoặc CoordinatorLayout
          trong file activity_main.xml sẽ tốt hơn, nhưng tạm thời để đây) -->
@@ -38,6 +40,7 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         android:contentDescription="Thêm chi tiêu mới"
+        android:background="@android:color/white"
         app:srcCompat="@android:drawable/ic_input_add" />
 
 </LinearLayout>

@@ -7,14 +7,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ui.categories.AddEditCategoryActivity">
+    tools:context=".ui.categories.AddEditCategoryActivity"
+    android:background="@color/app_background_gray">
 
     <!-- BƯỚC 2: Thêm Toolbar vào đây -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar_add_edit_category"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:background="@drawable/toolbar_gradient_background"
         app:titleTextColor="@android:color/white"
         android:elevation="4dp"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"

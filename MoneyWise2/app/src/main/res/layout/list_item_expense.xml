@@ -8,7 +8,8 @@
     android:layout_height="wrap_content"
     app:cardElevation="2dp"
     app:cardUseCompatPadding="true"
-    app:cardCornerRadius="8dp">
+    app:cardCornerRadius="8dp"
+    app:cardBackgroundColor="@android:color/white">
 
     <!-- BƯỚC 2: Dùng LinearLayout ngang như cũ, nhưng thêm gravity -->
     <LinearLayout
