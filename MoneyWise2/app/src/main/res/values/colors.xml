@@ -3,4 +3,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="colorNegative">#D32F2F</color>
+    <color name="app_background_gray">#f9f9f9</color>
+
+    <color name="toolbar_gradient_start">#DA4453</color> <color name="toolbar_gradient_end">#89216B</color>
 </resources>

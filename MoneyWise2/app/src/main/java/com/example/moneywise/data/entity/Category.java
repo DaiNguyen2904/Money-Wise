@@ -60,9 +60,16 @@ public class Category {
     public Category() {}
 
     // Constructor (giữ nguyên, không cần @PropertyName)
-    public Category(@NonNull String categoryId, @NonNull String userId, @NonNull String name,
-                    String icon, String color, int isDefault, long createdAt) {
-// ... (code constructor giữ nguyên) ...
+
+
+    public Category(@NonNull String categoryId, @NonNull String userId, @NonNull String name, String icon, String color, int isDefault, long createdAt) {
+        this.categoryId = categoryId;
+        this.userId = userId;
+        this.name = name;
+        this.icon = icon;
+        this.color = color;
+        this.isDefault = isDefault;
+        this.createdAt = createdAt;
     }
 
     // --- SỬA LẠI GETTERS ĐỂ DÙNG @PropertyName ---

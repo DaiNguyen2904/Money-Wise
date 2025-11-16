@@ -18,6 +18,7 @@ import com.example.moneywise.ui.budgets.BudgetFragment;
 import com.example.moneywise.ui.categories.CategoryFragment;
 import com.example.moneywise.ui.expenses.ExpenseFragment;
 import com.example.moneywise.ui.home.HomeFragment;
+import com.example.moneywise.ui.report.ReportFragment;
 import com.example.moneywise.ui.user.UserFragment;
 import com.example.moneywise.utils.SessionManager;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -90,6 +91,16 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
+    /**
+     * HÀM MỚI: Dùng để chuyển tab theo chương trình
+     * (Fragment sẽ gọi hàm này)
+     */
+    public void navigateToTab(int tabId) {
+        if (mBottomNav != null) {
+            mBottomNav.setSelectedItemId(tabId);
+        }
+    }
+
 
     /**
      * HÀM MỚI: Dùng để thay thế Fragment
@@ -117,10 +128,12 @@ public class MainActivity extends AppCompatActivity{
             } else if (itemId == R.id.nav_budgets) {
                 loadFragment(new BudgetFragment());
                 return true;
-            } else if (itemId == R.id.nav_categories) {
-                loadFragment(new CategoryFragment());
+            }
+            else if (itemId == R.id.nav_report) {
+                loadFragment(new ReportFragment());
                 return true;
-            } else if (itemId == R.id.nav_user) { // MỚI
+            }
+            else if (itemId == R.id.nav_user) { // MỚI
                 loadFragment(new UserFragment());
                 return true;
             }

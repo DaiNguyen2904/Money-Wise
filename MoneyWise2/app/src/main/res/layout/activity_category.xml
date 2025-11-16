@@ -5,7 +5,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.categories.CategoryActivity">
+    tools:context=".ui.categories.CategoryActivity"
+    android:background="@color/app_background_gray">
 
     <ListView
         android:id="@+id/list_view_categories"
