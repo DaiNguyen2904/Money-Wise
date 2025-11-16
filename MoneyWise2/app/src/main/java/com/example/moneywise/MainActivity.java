@@ -91,6 +91,16 @@ public class MainActivity extends AppCompatActivity{
         }
     }
 
+    /**
+     * HÀM MỚI: Dùng để chuyển tab theo chương trình
+     * (Fragment sẽ gọi hàm này)
+     */
+    public void navigateToTab(int tabId) {
+        if (mBottomNav != null) {
+            mBottomNav.setSelectedItemId(tabId);
+        }
+    }
+
 
     /**
      * HÀM MỚI: Dùng để thay thế Fragment

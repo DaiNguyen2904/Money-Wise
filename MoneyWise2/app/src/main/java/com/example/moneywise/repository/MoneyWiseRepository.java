@@ -632,4 +632,20 @@ public class MoneyWiseRepository {
     public LiveData<List<CategoryExpenseSummary>> getExpenseSummaryByCategory(String currentUserId, long startDate, long endDate) {
         return mExpenseDao.getExpenseSummaryByCategory(currentUserId, startDate, endDate);
     }
+
+    /**
+     * Lấy tổng chi tiêu trong một khoảng thời gian.
+     * (Hàm này gọi DAO và trả về LiveData)
+     */
+    public LiveData<Double> getTotalSum(String userId, long startDate, long endDate) {
+        return mExpenseDao.getTotalSum(userId, startDate, endDate);
+    }
+
+    /**
+     * Lấy 5 giao dịch gần đây nhất.
+     * (Hàm này gọi DAO và trả về LiveData)
+     */
+    public LiveData<List<Expense>> getRecentExpenses(String userId) {
+        return mExpenseDao.getRecentExpenses(userId);
+    }
 }
