@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- BƯỚC 1: Thêm MaterialCardView làm gốc để có hiệu ứng thẻ như ảnh -->
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -11,15 +10,14 @@
     app:cardCornerRadius="8dp"
     app:cardBackgroundColor="@android:color/white">
 
-    <!-- BƯỚC 2: Dùng LinearLayout ngang như cũ, nhưng thêm gravity -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:padding="12dp"
-        android:gravity="center_vertical">
+        android:padding="12dp">
 
-        <!-- Icon (Giữ nguyên) -->
+        <!-- Icon -->
         <ImageView
             android:id="@+id/image_view_category_icon"
             android:layout_width="40dp"
@@ -30,101 +28,96 @@
             app:tint="@android:color/white"
             tools:src="@android:drawable/ic_menu_camera" />
 
-        <!-- BƯỚC 3: Sắp xếp lại khối văn bản (layout_weight="1") -->
+        <!-- KHỐI VĂN BẢN (Note + Category + Date + Amount) -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="260dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="vertical"
-            android:layout_marginEnd="8dp">
+            android:orientation="vertical">
 
-            <!-- Ghi chú (Đảo lên trên cùng, cho chữ to và đậm) -->
+            <!-- Ghi chú -->
             <TextView
                 android:id="@+id/text_view_note"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:textAppearance="?attr/textAppearanceBodyLarge"
                 android:textStyle="bold"
-                android:maxLines="1"
-                android:ellipsize="end"
                 tools:text="Cơm trưa văn phòng" />
 
-            <!-- BƯỚC 4: Bọc Tên DM và Ngày vào 1 Layout ngang -->
+            <!-- Category + Date -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-                <!-- Tên Danh mục (cho chữ nhỏ) -->
                 <TextView
                     android:id="@+id/text_view_category_name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
                     android:textColor="?android:attr/textColorSecondary"
                     android:textSize="12sp"
                     tools:text="Ăn uống" />
 
-                <!-- Dấu chấm ngăn cách -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginEnd="4dp"
                     android:text=" • "
                     android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="12sp"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"/>
+                    android:textSize="12sp" />
 
-                <!-- Ngày (cho chữ nhỏ) -->
                 <TextView
                     android:id="@+id/text_view_date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="12sp"
                     android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="12sp"
                     tools:text="07/11/2025" />
 
             </LinearLayout>
 
+            <!-- Số tiền (ĐƯA XUỐNG DƯỚI) -->
+            <TextView
+                android:id="@+id/text_view_amount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="@color/colorNegative"
+                android:textStyle="bold"
+                tools:text="- 50.000 đ"
+                android:singleLine="true"
+                android:ellipsize="end"/>
+
         </LinearLayout>
 
-        <!-- BƯỚC 5: Số tiền (Gần như giữ nguyên, chỉ chỉnh lề) -->
-        <TextView
-            android:id="@+id/text_view_amount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginEnd="8dp"
-            android:textAppearance="?attr/textAppearanceBodyLarge"
-            android:textStyle="bold"
-            android:textColor="@color/colorNegative"
-            tools:text="- 50.000 đ" />
-
-        <!-- BƯỚC 6: Các nút bấm (Gói vào 1 Layout) -->
+        <!-- Nút sửa + xóa -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="center_vertical">
+            android:gravity="center"
+            android:orientation="horizontal">
 
             <ImageButton
                 android:id="@+id/button_edit_expense"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@android:drawable/ic_menu_edit"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Sửa"
+                android:src="@drawable/icons8_edit_64"
                 app:tint="?attr/colorControlNormal" />
 
             <ImageButton
                 android:id="@+id/button_delete_expense"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
-                android:src="@android:drawable/ic_menu_delete"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                app:tint="@color/colorNegative"
-            android:contentDescription="Xóa" />
+                android:src="@drawable/icons8_delete_30"
+                app:tint="@color/colorNegative" />
+
         </LinearLayout>
 
     </LinearLayout>
