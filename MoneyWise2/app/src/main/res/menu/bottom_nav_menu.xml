@@ -2,24 +2,26 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_home"
-        android:icon="@android:drawable/ic_menu_compass"
+        android:icon="@drawable/icons8_home_24"
         android:title="Trang chủ" />
     <item
         android:id="@+id/nav_expenses"
-        android:icon="@android:drawable/ic_menu_today" android:title="Chi tiêu" />
+        android:icon="@drawable/icons8_payment_history_50"
+        android:title="Chi tiêu" />
     <item
         android:id="@+id/nav_report"
-        android:icon="@android:drawable/ic_menu_gallery"
+        android:icon="@drawable/icons8_report_50"
         android:title="Báo cáo" />
     <item
         android:id="@+id/nav_budgets"
-        android:icon="@android:drawable/ic_menu_compass" android:title="Ngân sách" />
+        android:icon="@drawable/icons8_budget_50__1_"
+        android:title="Ngân sách" />
 
 <!--    <item-->
 <!--        android:id="@+id/nav_categories"-->
 <!--        android:icon="@android:drawable/ic_menu_sort_by_size" android:title="Danh mục" />-->
     <item
         android:id="@+id/nav_user"
-        android:icon="@android:drawable/ic_menu_myplaces"
+        android:icon="@drawable/icons8_profile_50"
         android:title="Người dùng" />
 </menu>

@@ -10,17 +10,18 @@
     tools:context=".ui.expenses.ExpenseFragment">
 
     <!-- 1. Hộp Tìm kiếm MỚI -->
+
+    <!-- 2. ListView cũ (thêm layout_weight) -->
     <androidx.appcompat.widget.SearchView
         android:id="@+id/search_view_expense"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:iconifiedByDefault="false"
-        app:queryHint="Tìm theo ghi chú, danh mục, số tiền..."
+        android:layout_height="72dp"
         android:background="@android:color/white"
         android:elevation="4dp"
-        android:paddingBottom="8dp"/>
+        android:paddingBottom="8dp"
+        app:iconifiedByDefault="false"
+        app:queryHint="Tìm theo ghi chú, danh mục, số tiền..." />
 
-    <!-- 2. ListView cũ (thêm layout_weight) -->
     <ListView
         android:id="@+id/list_view_expenses"
         android:layout_width="match_parent"
