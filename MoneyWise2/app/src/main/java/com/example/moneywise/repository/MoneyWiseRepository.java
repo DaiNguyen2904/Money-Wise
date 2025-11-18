@@ -648,4 +648,9 @@ public class MoneyWiseRepository {
     public LiveData<List<Expense>> getRecentExpenses(String userId) {
         return mExpenseDao.getRecentExpenses(userId);
     }
+
+    // --- HÀM MỚI: Lấy ngân sách theo danh mục (Đồng bộ) ---
+    public Budget getBudgetByCategory_Sync(String userId, String categoryId) {
+        return mBudgetDao.getBudgetByCategoryId(userId, categoryId);
+    }
 }

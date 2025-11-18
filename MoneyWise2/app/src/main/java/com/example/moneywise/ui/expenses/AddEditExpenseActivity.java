@@ -31,6 +31,7 @@ import com.example.moneywise.data.entity.Category;
 import com.example.moneywise.data.entity.Expense;
 import com.example.moneywise.repository.MoneyWiseRepository;
 import com.example.moneywise.ui.categories.CategoryActivity;
+import com.example.moneywise.utils.MoneyTextWatcher;
 import com.example.moneywise.utils.SessionManager;
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -101,6 +102,7 @@ public class AddEditExpenseActivity extends AppCompatActivity {
 
         // Ánh xạ Views
         mEditTextAmount = findViewById(R.id.edit_text_amount);
+        mEditTextAmount.addTextChangedListener(new MoneyTextWatcher(mEditTextAmount));
         mGridCategories = findViewById(R.id.grid_layout_categories); // <-- CẬP NHẬT
         mBtnOtherCategory = findViewById(R.id.cat_btn_other); // <-- CẬP NHẬT
 
@@ -276,7 +278,10 @@ public class AddEditExpenseActivity extends AppCompatActivity {
     private void saveExpense() {
         // 1. Validation (Kiểm tra dữ liệu)
         String amountString = mEditTextAmount.getText().toString();
-        if (amountString.isEmpty()) {
+
+        // XỬ LÝ FORMAT: Xóa dấu chấm trước khi parse
+        String cleanAmount = amountString.replace(".", "").replace(",", "");
+        if (cleanAmount.isEmpty()) {
             mEditTextAmount.setError("Vui lòng nhập số tiền");
             mEditTextAmount.requestFocus();
             return;
@@ -288,7 +293,7 @@ public class AddEditExpenseActivity extends AppCompatActivity {
         }
 
         // 2. Lấy dữ liệu
-        double amount = Double.parseDouble(amountString);
+        double amount = Double.parseDouble(cleanAmount);
         String note = mEditTextNote.getText().toString();
         // Lấy categoryId (đã được lưu trong mSelectedCategoryId)
         String categoryId = mSelectedCategoryId;
