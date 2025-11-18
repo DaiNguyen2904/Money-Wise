@@ -176,9 +176,23 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
         }
 
         if (exceededCount > 0) {
+            // 1. Tạo Snackbar như cũ
             Snackbar snackbar = Snackbar.make(mListView, "⚠️ Có " + exceededCount + " mục chi tiêu vượt quá ngân sách!", Snackbar.LENGTH_LONG);
+
+            // 2. Đổi màu nền cảnh báo
             snackbar.setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.budget_exceeded));
-            snackbar.setAction("Xem", v -> {}); // Nút hành động (nếu cần)
+
+            // 3. Action (nếu cần)
+            snackbar.setAction("Đóng", v -> snackbar.dismiss());
+            snackbar.setActionTextColor(ContextCompat.getColor(requireContext(), android.R.color.white));
+
+            // --- KHẮC PHỤC LỖI ĐÈ MENU ---
+            // Gắn Snackbar vào nút FAB (dấu cộng).
+            // Nó sẽ tự động đẩy Snackbar lên phía trên nút FAB, không bị menu che nữa.
+            if (mFab != null) {
+                snackbar.setAnchorView(mFab);
+            }
+
             snackbar.show();
         }
     }

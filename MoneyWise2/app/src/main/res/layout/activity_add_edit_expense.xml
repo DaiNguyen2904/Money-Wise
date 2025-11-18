@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- BƯỚC 1: Đổi root thành LinearLayout (vertical) -->
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -10,7 +9,6 @@
     tools:context=".ui.expenses.AddEditExpenseActivity"
     android:background="@color/app_background_gray">
 
-    <!-- BƯỚC 2: Thêm Toolbar vào đây -->
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar_add_edit_expense"
         android:layout_width="match_parent"
@@ -21,12 +19,10 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-    <!-- BƯỚC 3: Bọc nội dung cũ trong NestedScrollView -->
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Đây là nội dung gốc của bạn (chỉ đổi ScrollView -> LinearLayout) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -49,9 +45,9 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_text_amount"
                     android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:inputType="numberDecimal"
-                    android:textSize="14sp" />
+                    android:layout_height="wrap_content"
+                    android:minHeight="59dp"
+                    android:inputType="numberDecimal" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
@@ -221,7 +217,8 @@
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_text_note"
                     android:layout_width="match_parent"
-                    android:layout_height="59dp"
+                    android:layout_height="wrap_content"
+                    android:minHeight="59dp"
                     android:inputType="textCapSentences" />
 
             </com.google.android.material.textfield.TextInputLayout>

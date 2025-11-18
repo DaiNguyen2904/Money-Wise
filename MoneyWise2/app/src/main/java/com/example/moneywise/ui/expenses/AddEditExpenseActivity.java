@@ -172,8 +172,13 @@ public class AddEditExpenseActivity extends AppCompatActivity {
     private void observeLoadedExpense() {
         mViewModel.getLoadedExpense().observe(this, expense -> {
             if (expense != null) {
-                // Điền dữ liệu Giao dịch vào Form
-                mEditTextAmount.setText(String.valueOf(expense.getAmount()));
+                // --- SỬA LỖI Ở ĐÂY ---
+                // Nguyên nhân: expense.getAmount() trả về 3000.0 (double)
+                // TextWatcher xóa dấu chấm -> thành 30000 -> Sai.
+                // Giải pháp: Ép về long để lấy 3000 trước khi setText.
+                long amountAsLong = (long) expense.getAmount();
+                mEditTextAmount.setText(String.valueOf(amountAsLong));
+
                 mEditTextNote.setText(expense.getNote());
 
                 // Cập nhật Calendar và nút Ngày
