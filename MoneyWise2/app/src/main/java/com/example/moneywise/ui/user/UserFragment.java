@@ -210,8 +210,15 @@ public class UserFragment extends Fragment {
 
         // Nút Lưu thay đổi
         mBtnSaveProfile.setOnClickListener(v -> {
-            String name = mEditTextUserName.getText().toString();
-            String phone = mEditTextUserPhone.getText().toString();
+            String name = mEditTextUserName.getText().toString().trim(); // Cắt khoảng trắng thừa
+            String phone = mEditTextUserPhone.getText().toString().trim();
+
+            // --- THÊM KIỂM TRA VALIDATION ---
+            if (name.isEmpty()) {
+                mEditTextUserName.setError("Tên hiển thị không được để trống");
+                mEditTextUserName.requestFocus(); // Đưa con trỏ về ô này
+                return; // Dừng lại, không lưu
+            }
 
             // Gọi ViewModel
             mUserViewModel.updateProfile(name, phone);
