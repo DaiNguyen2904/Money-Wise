@@ -22,6 +22,11 @@ public class AddEditBudgetViewModel extends AndroidViewModel {
 
     private String currentUserId;
 
+    // Interface callback để trả kết quả kiểm tra
+    public interface OnDuplicateCheckListener {
+        void onResult(boolean isDuplicate);
+    }
+
     // Dùng MutableLiveData để chứa Budget đang được sửa
 
     private MutableLiveData<Budget> mLoadedBudget = new MutableLiveData<>();
@@ -52,5 +57,29 @@ public class AddEditBudgetViewModel extends AndroidViewModel {
      */
     public LiveData<List<Category>> getAllCategories() {
         return mAllCategories;
+    }
+
+    // --- HÀM MỚI: Kiểm tra trùng lặp ---
+    public void checkDuplicateBudget(String categoryId, String currentBudgetId, OnDuplicateCheckListener listener) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            // Tìm xem có ngân sách nào dùng categoryId này chưa
+            Budget existingBudget = mRepository.getBudgetByCategory_Sync(currentUserId, categoryId);
+
+            boolean isDuplicate = false;
+            if (existingBudget != null) {
+                // Nếu đang ở chế độ THÊM: Cứ tồn tại là trùng
+                if (currentBudgetId == null) {
+                    isDuplicate = true;
+                }
+                // Nếu đang ở chế độ SỬA: Trùng nếu ID khác nhau (nghĩa là trùng với ngân sách KHÁC)
+                else if (!existingBudget.getBudgetId().equals(currentBudgetId)) {
+                    isDuplicate = true;
+                }
+            }
+
+            // Trả kết quả về (cần post về luồng UI nếu muốn cập nhật UI ngay,
+            // nhưng callback này sẽ được xử lý trong Activity nên ta cứ trả về)
+            listener.onResult(isDuplicate);
+        });
     }
 }
