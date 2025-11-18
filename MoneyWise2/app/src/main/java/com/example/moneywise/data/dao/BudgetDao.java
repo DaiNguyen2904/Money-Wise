@@ -39,4 +39,7 @@ public interface BudgetDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertAll(List<Budget> budgets);
+
+    @Query("SELECT * FROM BUDGETS WHERE user_id = :userId AND category_id = :categoryId LIMIT 1")
+    Budget getBudgetByCategoryId(String userId, String categoryId);
 }

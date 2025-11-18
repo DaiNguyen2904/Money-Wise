@@ -28,6 +28,7 @@ import com.example.moneywise.data.entity.Category;
 import com.example.moneywise.data.entity.Expense;
 import com.example.moneywise.ui.budgets.AddEditBudgetViewModel;
 import com.example.moneywise.ui.categories.CategoryActivity;
+import com.example.moneywise.utils.MoneyTextWatcher;
 import com.google.android.material.textfield.TextInputEditText;
 
 
@@ -82,6 +83,7 @@ public class AddEditBudgetActivity extends AppCompatActivity {
 
         // Ánh xạ Views
         mEditTextAmount = findViewById(R.id.edit_text_amount_budget);
+        mEditTextAmount.addTextChangedListener(new MoneyTextWatcher(mEditTextAmount));
         mGridCategories = findViewById(R.id.grid_layout_categories_budget); // <-- CẬP NHẬT
         mBtnOtherCategory = findViewById(R.id.cat_btn_other_budget); // <-- CẬP NHẬT
         mToolbar = findViewById(R.id.toolbar_add_edit_budget);
@@ -151,28 +153,48 @@ public class AddEditBudgetActivity extends AppCompatActivity {
     }
 
     private void saveBudget() {
-        // 1. Validation (Kiểm tra dữ liệu)
+        // 1. Validation cơ bản
         String amountString = mEditTextAmount.getText().toString();
-        if (amountString.isEmpty()) {
+
+        // --- XỬ LÝ FORMAT TIỀN TỆ (Để lấy giá trị số thực) ---
+        // Loại bỏ dấu chấm/phẩy ngăn cách hàng nghìn trước khi parse
+        // Ví dụ: "1.000.000" -> "1000000"
+        String cleanAmountString = amountString.replace(".", "").replace(",", "");
+
+        if (cleanAmountString.isEmpty()) {
             mEditTextAmount.setError("Vui lòng nhập số tiền");
             mEditTextAmount.requestFocus();
             return;
         }
-
         if (mSelectedCategoryId == null) {
             Toast.makeText(this, "Vui lòng chọn một danh mục", Toast.LENGTH_SHORT).show();
-            return; // Ngăn không cho lưu
+            return;
         }
 
-        double amount = Double.parseDouble(mEditTextAmount.getText().toString());
+        double amount = Double.parseDouble(cleanAmountString);
         String categoryId = mSelectedCategoryId;
 
-        // 3. Đóng gói dữ liệu
+        // --- HÀM MỚI: GỌI KIỂM TRA TRÙNG LẶP ---
+        // Nếu thêm mới: mCurrentBudgetId là null. Nếu sửa: có giá trị.
+        mViewModel.checkDuplicateBudget(categoryId, isEditMode ? mCurrentBudgetId : null, isDuplicate -> {
+            // Chạy về luồng UI để hiển thị Toast hoặc Finish
+            runOnUiThread(() -> {
+                if (isDuplicate) {
+                    Toast.makeText(this, "Danh mục này đã có Ngân sách rồi!", Toast.LENGTH_LONG).show();
+                } else {
+                    // Không trùng -> Tiến hành lưu
+                    finishSaving(amount, categoryId);
+                }
+            });
+        });
+    }
+
+    // Tách logic lưu thành hàm riêng để gọi sau khi check xong
+    private void finishSaving(double amount, String categoryId) {
         Intent replyIntent = new Intent();
         replyIntent.putExtra(EXTRA_BUDGET_CATEGORY_ID, categoryId);
         replyIntent.putExtra(EXTRA_BUDGET_AMOUNT, amount);
 
-        // --- CẬP NHẬT: GỬI KÈM ID NẾU LÀ CHẾ ĐỘ SỬA ---
         if (isEditMode) {
             replyIntent.putExtra(EXTRA_BUDGET_ID, mCurrentBudgetId);
         }
