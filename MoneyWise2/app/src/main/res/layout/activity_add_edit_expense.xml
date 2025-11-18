@@ -44,15 +44,14 @@
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:hintEnabled="false"
-                app:placeholderText="Nhập số tiền">
+                android:hint="Nhập số tiền">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edit_text_amount"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:inputType="numberDecimal"
-                    android:textSize="8sp" />
+                    android:textSize="14sp" />
 
             </com.google.android.material.textfield.TextInputLayout>
 
