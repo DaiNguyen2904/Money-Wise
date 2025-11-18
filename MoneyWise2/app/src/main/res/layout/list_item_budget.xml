@@ -32,7 +32,7 @@
                     android:layout_height="48dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Sửa"
-                    app:srcCompat="@android:drawable/ic_menu_edit"
+                    app:srcCompat="@drawable/icons8_edit_64"
                     app:tint="?attr/colorControlNormal" />
 
                 <ImageButton
@@ -42,18 +42,19 @@
                     android:layout_marginStart="8dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:contentDescription="Xóa"
-                    app:srcCompat="@android:drawable/ic_menu_delete"
+                    app:srcCompat="@drawable/icons8_delete_30"
                     app:tint="@android:color/holo_red_dark" />
 
             </LinearLayout>
+
             <TextView
                 android:id="@+id/text_view_budget_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentStart="true"
-                android:layout_toStartOf="@id/layout_buttons_budget"
-                android:layout_centerVertical="true"
+                android:layout_marginStart="0dp"
                 android:layout_marginEnd="8dp"
+                android:layout_toStartOf="@id/layout_buttons_budget"
                 android:textAppearance="?attr/textAppearanceHeadline6"
                 tools:text="Ngân sách Ăn uống" />
 
