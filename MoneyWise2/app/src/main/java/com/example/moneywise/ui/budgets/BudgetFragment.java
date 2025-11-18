@@ -1,7 +1,9 @@
 package com.example.moneywise.ui.budgets;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,19 +19,20 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.moneywise.R;
 import com.example.moneywise.data.entity.Budget;
-import com.example.moneywise.data.entity.BudgetPeriod;
 import com.example.moneywise.data.model.BudgetStatus;
-import com.example.moneywise.ui.budgets.AddEditBudgetActivity;
 import com.example.moneywise.utils.SessionManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.example.moneywise.R;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -40,17 +43,17 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
     private ListView mListView;
     private FloatingActionButton mFab;
 
-    private View mTotalBudgetBar; // Thẻ CardView
+    // Các View của thanh Tổng
+    private View mTotalBudgetBar;
     private TextView mTotalBudgetName;
     private TextView mTotalBudgetPeriod;
     private ProgressBar mTotalProgressBar;
     private TextView mTotalSpent;
     private TextView mTotalAmount;
-    private NumberFormat mCurrencyFormat; // Để định dạng tiền
+    private TextView mTotalWarningText; // Thêm view này
 
+    private NumberFormat mCurrencyFormat;
     private String currentUserId;
-
-    // Launcher để mở màn hình Thêm/Sửa Ngân sách
     private ActivityResultLauncher<Intent> mAddEditBudgetLauncher;
 
     @Nullable
@@ -62,60 +65,125 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        // --- CÀI ĐẶT ACTIONBAR ---
-        // Lấy ActionBar từ Activity cha
+
+        // --- Setup ActionBar ---
         AppCompatActivity activity = (AppCompatActivity) getActivity();
         if (activity != null && activity.getSupportActionBar() != null) {
             ActionBar actionBar = activity.getSupportActionBar();
-            actionBar.setTitle("Ngân sách"); // Đặt tiêu đề
-            actionBar.setDisplayHomeAsUpEnabled(true); // HIỂN THỊ nút quay lại
+            actionBar.setTitle("Ngân sách");
+            actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-// Khởi tạo định dạng tiền
         mCurrencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 
-        // 1. Ánh xạ Views (của Fragment)
+        // --- Ánh xạ Views ---
         mListView = view.findViewById(R.id.list_view_budgets);
         mFab = view.findViewById(R.id.fab_add_budget);
 
-        // --- BƯỚC 2: ÁNH XẠ CÁC VIEW CỦA THANH "TỔNG" ---
+        // --- Ánh xạ Thanh Tổng ---
         mTotalBudgetBar = view.findViewById(R.id.total_budget_bar);
         mTotalBudgetName = mTotalBudgetBar.findViewById(R.id.text_view_budget_name);
         mTotalBudgetPeriod = mTotalBudgetBar.findViewById(R.id.text_view_budget_period);
         mTotalProgressBar = mTotalBudgetBar.findViewById(R.id.progress_bar_budget);
         mTotalSpent = mTotalBudgetBar.findViewById(R.id.text_view_spent);
         mTotalAmount = mTotalBudgetBar.findViewById(R.id.text_view_total);
+        mTotalWarningText = mTotalBudgetBar.findViewById(R.id.text_view_budget_warning); // Ánh xạ text cảnh báo
 
-        // (Ẩn các nút Sửa/Xóa trên thanh Tổng)
+        // Ẩn nút Sửa/Xóa ở thanh tổng
         mTotalBudgetBar.findViewById(R.id.layout_buttons_budget).setVisibility(View.GONE);
 
-        // 2. Khởi tạo Adapter
+        // --- Setup Adapter & ViewModel ---
         mAdapter = new BudgetAdapter(requireContext(), new ArrayList<>(), this);
         mListView.setAdapter(mAdapter);
 
-        // 3. Lấy ViewModel
         mBudgetViewModel = new ViewModelProvider(this).get(BudgetViewModel.class);
 
-        // 4. Theo dõi LiveData (cho ListView)
+        // --- OBSERVER 1: Danh sách ngân sách ---
         mBudgetViewModel.getBudgetStatuses().observe(getViewLifecycleOwner(), budgetStatuses -> {
             mAdapter.setData(budgetStatuses);
+            // Kiểm tra và hiện Snackbar cảnh báo chung
+            checkAndShowSnackbar(budgetStatuses);
         });
 
-        // --- BƯỚC 3: THEO DÕI LIVE DATA "TỔNG" MỚI ---
+        // --- OBSERVER 2: Tổng ngân sách ---
         mBudgetViewModel.getTotalBudgetStatus().observe(getViewLifecycleOwner(), totalStatus -> {
             if (totalStatus != null) {
-                // Cập nhật giao diện thanh "Tổng"
                 mTotalBudgetName.setText(totalStatus.categoryName); // "Tổng chi tiêu"
                 mTotalBudgetPeriod.setText("Tháng này");
-                mTotalProgressBar.setProgress(totalStatus.progressPercent);
                 mTotalSpent.setText(mCurrencyFormat.format(totalStatus.spentAmount));
                 mTotalAmount.setText(mCurrencyFormat.format(totalStatus.budget.getAmount()));
+
+                // Cập nhật màu sắc và cảnh báo cho thanh Tổng
+                updateBudgetVisuals(totalStatus, mTotalProgressBar, mTotalSpent, mTotalWarningText);
             }
         });
 
+        // --- Setup Launcher (Thêm/Sửa) ---
+        setupActivityResultLauncher();
 
+        mFab.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), AddEditBudgetActivity.class);
+            mAddEditBudgetLauncher.launch(intent);
+        });
+    }
 
+    /**
+     * Hàm cập nhật màu sắc và cảnh báo cho 1 View (Dùng cho thanh Tổng)
+     */
+    private void updateBudgetVisuals(BudgetStatus status, ProgressBar progressBar, TextView textSpent, TextView textWarning) {
+        int progress = status.progressPercent;
+        int colorResId;
+        String warningMsg = "";
+        boolean showWarning = false;
 
+        if (progress >= 100) {
+            colorResId = R.color.budget_exceeded; // Đỏ
+            warningMsg = "Tổng chi tiêu đã vỡ kế hoạch!";
+            showWarning = true;
+        } else if (progress >= 80) {
+            colorResId = R.color.budget_warning; // Cam
+            warningMsg = "Tổng chi tiêu sắp hết hạn mức.";
+            showWarning = true;
+        } else {
+            colorResId = R.color.budget_safe; // Xanh
+            showWarning = false;
+        }
+
+        int color = ContextCompat.getColor(requireContext(), colorResId);
+
+        // Đổi màu
+        progressBar.setProgress(progress);
+        progressBar.setProgressTintList(ColorStateList.valueOf(color));
+        textSpent.setTextColor(color);
+
+        // Hiện Text cảnh báo
+        if (showWarning && textWarning != null) {
+            textWarning.setVisibility(View.VISIBLE);
+            textWarning.setText(warningMsg);
+            textWarning.setTextColor(color);
+        } else if (textWarning != null) {
+            textWarning.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * Kiểm tra danh sách để hiện Snackbar nếu có mục nguy hiểm
+     */
+    private void checkAndShowSnackbar(List<BudgetStatus> statuses) {
+        int exceededCount = 0;
+        for (BudgetStatus status : statuses) {
+            if (status.progressPercent >= 100) exceededCount++;
+        }
+
+        if (exceededCount > 0) {
+            Snackbar snackbar = Snackbar.make(mListView, "⚠️ Có " + exceededCount + " mục chi tiêu vượt quá ngân sách!", Snackbar.LENGTH_LONG);
+            snackbar.setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.budget_exceeded));
+            snackbar.setAction("Xem", v -> {}); // Nút hành động (nếu cần)
+            snackbar.show();
+        }
+    }
+
+    private void setupActivityResultLauncher() {
         mAddEditBudgetLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -124,100 +192,44 @@ public class BudgetFragment extends Fragment implements BudgetAdapter.OnBudgetIt
                         String categoryId = data.getStringExtra(AddEditBudgetActivity.EXTRA_BUDGET_CATEGORY_ID);
                         double amount = data.getDoubleExtra(AddEditBudgetActivity.EXTRA_BUDGET_AMOUNT, 0);
 
-                        // --- CẬP NHẬT LOGIC ---
+                        SessionManager sessionManager = new SessionManager(requireActivity().getApplication());
+                        currentUserId = sessionManager.getUserId();
+
                         if (data.hasExtra(AddEditBudgetActivity.EXTRA_BUDGET_ID)) {
-                            // --- CHẾ ĐỘ SỬA ---
+                            // Sửa
                             String budgetId = data.getStringExtra(AddEditBudgetActivity.EXTRA_BUDGET_ID);
-
-                            // Tạo đối tượng Budget để cập nhật
-                            // (Chúng ta không cần tạo mới, chỉ cần ID, categoryId, amount)
-                            // (Chúng ta sẽ cần hàm getBudgetById_Sync nếu muốn giữ lại createdAt)
-                            // Tạm thời, tạo mới với ID cũ
-                            SessionManager sessionManager = new SessionManager(requireActivity().getApplication());
-                            currentUserId = sessionManager.getUserId(); // Lấy ID đã lưu
-
-                            Budget updatedBudget = new Budget(
-                                    budgetId, // ID Cũ
-                                    currentUserId,
-                                    categoryId,
-                                    amount,
-                                    System.currentTimeMillis() // Coi như là createdAt mới
-                            );
-                            // TODO: Nâng cấp: Tải budget cũ, chỉ cập nhật amount/categoryId
-
+                            Budget updatedBudget = new Budget(budgetId, currentUserId, categoryId, amount, System.currentTimeMillis());
                             mBudgetViewModel.update(updatedBudget);
-                            Toast.makeText(requireContext(), "Đã cập nhật Ngân sách!", Toast.LENGTH_SHORT).show();
-
+                            Toast.makeText(requireContext(), "Đã cập nhật!", Toast.LENGTH_SHORT).show();
                         } else {
-                            // --- CHẾ ĐỘ THÊM (Như cũ) ---
-                            Budget newBudget = new Budget(
-                                    UUID.randomUUID().toString(),
-                                    currentUserId, // TODO: Thay ID thật
-                                    categoryId,
-                                    amount,
-                                    System.currentTimeMillis()
-                            );
+                            // Thêm mới
+                            Budget newBudget = new Budget(UUID.randomUUID().toString(), currentUserId, categoryId, amount, System.currentTimeMillis());
                             mBudgetViewModel.insert(newBudget);
-                            Toast.makeText(requireContext(), "Đã lưu Ngân sách!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(requireContext(), "Đã thêm mới!", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
-
-
-
-        // 6. Xử lý FAB Click (dùng requireContext())
-        mFab.setOnClickListener(v -> {
-            Intent intent = new Intent(requireContext(), AddEditBudgetActivity.class);
-            mAddEditBudgetLauncher.launch(intent);
-        });
     }
 
-
-    /**
-     * Được gọi TỪ ADAPTER khi nhấn nút "Sửa"
-     */
     @Override
     public void onEditClick(BudgetStatus budgetStatus) {
-        Budget budgetToEdit = budgetStatus.budget;
-
         Intent intent = new Intent(requireContext(), AddEditBudgetActivity.class);
-
-        // Gửi dữ liệu Sửa sang
-        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_ID, budgetToEdit.getBudgetId());
-        // (Gửi 2 cái này để AddEditBudgetActivity có thể điền vào
-        //  ngay cả trước khi ViewModel tải xong)
-        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_CATEGORY_ID, budgetToEdit.getCategoryId());
-        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_AMOUNT, budgetToEdit.getAmount());
-
+        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_ID, budgetStatus.budget.getBudgetId());
+        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_CATEGORY_ID, budgetStatus.budget.getCategoryId());
+        intent.putExtra(AddEditBudgetActivity.EXTRA_BUDGET_AMOUNT, budgetStatus.budget.getAmount());
         mAddEditBudgetLauncher.launch(intent);
     }
 
-    /**
-     * Được gọi TỪ ADAPTER khi nhấn nút "Xóa"
-     */
     @Override
     public void onDeleteClick(BudgetStatus budgetStatus) {
-        // Lấy Ngân sách (Budget) từ đối tượng Status
-        Budget budgetToDelete = budgetStatus.budget;
-        showDeleteConfirmationDialog(budgetToDelete);
-    }
-
-    // --- BƯỚC 5: THÊM HÀM DIALOG XÁC NHẬN ---
-    private void showDeleteConfirmationDialog(Budget budgetToDelete) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Xác nhận Xóa");
-        builder.setMessage("Bạn có chắc chắn muốn xóa ngân sách này không?");
-
-        builder.setPositiveButton("Xóa", (dialog, which) -> {
-            // TODO: Bạn cần thêm hàm delete(Budget) vào BudgetViewModel
-            mBudgetViewModel.delete(budgetToDelete);
-            Toast.makeText(requireContext(), "Đã xóa ngân sách", Toast.LENGTH_SHORT).show();
-        });
-
-        builder.setNegativeButton("Hủy", (dialog, which) -> {
-            if (dialog != null) dialog.dismiss();
-        });
-
-        builder.create().show();
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Xác nhận Xóa")
+                .setMessage("Bạn có chắc chắn muốn xóa ngân sách mục " + budgetStatus.categoryName + " không?")
+                .setPositiveButton("Xóa", (dialog, which) -> {
+                    mBudgetViewModel.delete(budgetStatus.budget);
+                    Toast.makeText(requireContext(), "Đã xóa ngân sách", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Hủy", null)
+                .show();
     }
 }

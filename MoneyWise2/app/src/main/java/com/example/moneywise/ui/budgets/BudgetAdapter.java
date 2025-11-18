@@ -1,6 +1,7 @@
 package com.example.moneywise.ui.budgets;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,6 +11,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 
 import com.example.moneywise.R;
 import com.example.moneywise.data.model.BudgetStatus;
@@ -57,30 +59,50 @@ public class BudgetAdapter extends ArrayAdapter<BudgetStatus> {
         ImageButton buttonEdit = listItemView.findViewById(R.id.button_edit_budget);
         ImageButton buttonDelete = listItemView.findViewById(R.id.button_delete_budget);
 
+        TextView textWarning = listItemView.findViewById(R.id.text_view_budget_warning);
+
         // 3. Đổ dữ liệu
         if (currentStatus != null) {
             textBudgetName.setText(currentStatus.categoryName);
 
-            // TODO: Tạo một hàm tiện ích để chuyển Enum thành Tiếng Việt
-            // Ví dụ: "MONTHLY" -> "Hàng tháng"
-
-
-            // Định dạng tiền tệ
+            // Hiển thị số tiền
             textSpent.setText(currencyFormat.format(currentStatus.spentAmount));
             textTotal.setText(currencyFormat.format(currentStatus.budget.getAmount()));
-
-            // Đặt tiến độ
             progressBar.setProgress(currentStatus.progressPercent);
+
+            // --- LOGIC CẢNH BÁO VÀ MÀU SẮC ---
+            int colorResId;
+            if (currentStatus.progressPercent >= 100) {
+                // Vượt mức -> Màu Đỏ
+                colorResId = R.color.budget_exceeded;
+                textWarning.setVisibility(View.VISIBLE);
+                textWarning.setText("⚠️ Đã vượt quá hạn mức!");
+            } else if (currentStatus.progressPercent >= 80) {
+                // Sắp vượt -> Màu Cam
+                colorResId = R.color.budget_warning;
+                textWarning.setVisibility(View.VISIBLE);
+                textWarning.setText("⚠️ Sắp chạm ngưỡng hạn mức");
+            } else {
+                // An toàn -> Màu Xanh
+                colorResId = R.color.budget_safe;
+                textWarning.setVisibility(View.GONE);
+            }
+
+            // Lấy mã màu thực tế
+            int color = ContextCompat.getColor(getContext(), colorResId);
+
+            // Áp dụng màu
+            textSpent.setTextColor(color); // Đổi màu số tiền đã tiêu
+            textWarning.setTextColor(color); // Đổi màu text cảnh báo
+            progressBar.setProgressTintList(ColorStateList.valueOf(color)); // Đổi màu thanh progress
+
+            // Sự kiện Click
             buttonEdit.setOnClickListener(v -> {
-                if (mListener != null) {
-                    mListener.onEditClick(currentStatus);
-                }
+                if (mListener != null) mListener.onEditClick(currentStatus);
             });
 
             buttonDelete.setOnClickListener(v -> {
-                if (mListener != null) {
-                    mListener.onDeleteClick(currentStatus);
-                }
+                if (mListener != null) mListener.onDeleteClick(currentStatus);
             });
         }
 

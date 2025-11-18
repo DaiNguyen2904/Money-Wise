@@ -20,4 +20,19 @@ public class BudgetStatus {
         this.spentAmount = spentAmount;
         this.progressPercent = progressPercent;
     }
+
+    // Thêm Enum trạng thái
+    public enum State {
+        SAFE, WARNING, EXCEEDED
+    }
+    // Hàm lấy trạng thái hiện tại
+    public State getState() {
+        if (progressPercent >= 100) {
+            return State.EXCEEDED;
+        } else if (progressPercent >= 80) {
+            return State.WARNING;
+        } else {
+            return State.SAFE;
+        }
+    }
 }
