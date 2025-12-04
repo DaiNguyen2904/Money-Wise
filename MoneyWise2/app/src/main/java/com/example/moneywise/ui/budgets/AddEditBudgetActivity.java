@@ -135,8 +135,15 @@ public class AddEditBudgetActivity extends AppCompatActivity {
     private void observeLoadedBudget() {
         mViewModel.getLoadedBudget().observe(this, budget -> {
             if (budget != null) {
+                long amountAsLong = (long) budget.getAmount();
+                mEditTextAmount.setText(String.valueOf(amountAsLong));
+
+                // --- SỬA LỖI Ở ĐÂY ---
+                // Nguyên nhân: amountAsLong trả về 3000.0 (double)
+                //
+
                 // 1. Điền số tiền
-                mEditTextAmount.setText(String.valueOf(budget.getAmount()));
+                mEditTextAmount.setText(String.valueOf(amountAsLong));
 
                 // 2. Cố gắng highlight nút danh mục
                 isBudgetDataLoaded = true;
