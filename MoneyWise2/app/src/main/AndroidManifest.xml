@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:name=".MyApplication"
         android:allowBackup="true"
@@ -14,31 +17,36 @@
         android:theme="@style/Theme.MoneyWise">
 
         <activity
-            android:name=".ui.onboarding.OnboardingActivity"
-            android:exported="true"
-            android:theme="@style/Theme.MoneyWise"> <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
+            android:name=".ui.auth.LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
 
         <activity
-            android:name=".ui.auth.LoginActivity"
-            android:exported="false"> </activity>
+            android:name=".MainActivity"
+            android:exported="false" />
 
-        <activity android:name=".MainActivity"></activity>
         <activity android:name=".ui.expenses.AddEditExpenseActivity" />
+
         <activity
             android:name=".ui.categories.CategoryActivity"
             android:parentActivityName=".MainActivity" />
+
         <activity
             android:name=".ui.categories.AddEditCategoryActivity"
             android:parentActivityName=".ui.categories.CategoryActivity" />
-        <activity
-            android:name=".ui.budgets.BudgetActivity"
-            android:parentActivityName=".MainActivity" />
+
         <activity
             android:name=".ui.budgets.AddEditBudgetActivity"
-            android:parentActivityName=".ui.budgets.BudgetActivity" />
+            android:parentActivityName=".MainActivity" />
+
+        <activity
+            android:name=".ui.onboarding.OnboardingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MoneyWise" />
+
     </application>
 </manifest>
